@@ -1,0 +1,51 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Ops PDF Studio",
+  "version": "0.1.0",
+  "identifier": "com.amywork.ops-pdf-studio",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "security": {
+      "csp": null,
+      "capabilities": ["default"]
+    },
+    "windows": [
+      {
+        "label": "main",
+        "title": "Ops PDF Studio",
+        "center": true,
+        "width": 1440,
+        "height": 960,
+        "minWidth": 1120,
+        "minHeight": 760,
+        "resizable": true,
+        "theme": "Light"
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "publisher": "AmyWork",
+    "category": "Productivity",
+    "shortDescription": "Desktop app para importar, preencher, assinar e exportar PDFs operacionais.",
+    "longDescription": "Ops PDF Studio foi pensado para fluxos operacionais repetitivos. A app importa PDFs locais, salva assinaturas com protecao local, aplica campos visuais rapidamente e sempre exporta um novo PDF final.",
+    "copyright": "Copyright (c) 2026 AmyWork",
+    "useLocalToolsDir": true,
+    "windows": {
+      "allowDowngrades": false,
+      "nsis": {
+        "installMode": "currentUser",
+        "startMenuFolder": "Ops PDF Studio"
+      }
+    },
+    "macOS": {
+      "bundleName": "Ops PDF Studio"
+    }
+  }
+}

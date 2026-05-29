@@ -233,6 +233,7 @@ export default function App() {
   const canExport = workingDocument !== null && exportBlockers.length === 0;
   const hasAnyFields = (workingDocument?.fields.length ?? 0) > 0;
   const recentExports = useMemo(() => store.exportHistory.slice(0, 4), [store.exportHistory]);
+  const hasWorkingDocument = Boolean(workingDocument && pdfDocumentProxy);
   const selectedSignatureField = selectedField?.type === "signature" ? selectedField : null;
   const selectedSignatureProfile = selectedSignatureField?.signatureProfileId
     ? store.signatureProfiles.find((profile) => profile.id === selectedSignatureField.signatureProfileId) ?? null
@@ -241,6 +242,12 @@ export default function App() {
     ? store.signatureProfiles.find((profile) => profile.id === pendingSignatureProfileId) ?? null
     : null;
   const highlightedSignatureProfileId = selectedSignatureProfile?.id ?? pendingSignatureProfileId;
+  const placementLabel =
+    pendingFieldType === "signature" && pendingSignatureProfile
+      ? `Placing ${pendingSignatureProfile.displayName.toLowerCase()}`
+      : pendingFieldType
+        ? `Placing ${FIELD_TYPE_LABELS[pendingFieldType]}`
+        : null;
 
   function flash(nextNotice: Notice) {
     setNotice(nextNotice);
@@ -798,35 +805,42 @@ export default function App() {
       <header className="masthead">
         <div className="masthead__brand">
           <strong>Ops PDF Studio</strong>
-          <span>{workingDocument ? workingDocument.importedPdf.name : "No document loaded"}</span>
+          <span>{workingDocument ? workingDocument.importedPdf.name : "Ready to import"}</span>
         </div>
         <div className="masthead__status">
-          <span>{desktopRuntime ? "Desktop app" : "Web preview"}</span>
+          <span>{desktopRuntime ? "Desktop app" : "Web app"}</span>
           <span>Local data</span>
-          <span>Page {workingDocument ? workingDocument.activePage + 1 : "0"}</span>
-          <span>{workingDocument ? `${workingDocument.importedPdf.pageMappings.length} pages` : "Local mode"}</span>
-          {pendingFieldType === "signature" && pendingSignatureProfile ? (
-            <span>placing {pendingSignatureProfile.displayName.toLowerCase()}</span>
-          ) : null}
-          {pendingFieldType && pendingFieldType !== "signature" ? <span>placing {FIELD_TYPE_LABELS[pendingFieldType]}</span> : null}
+          {workingDocument ? <span>Page {workingDocument.activePage + 1}</span> : null}
+          {workingDocument ? <span>{workingDocument.importedPdf.pageMappings.length} pages</span> : null}
+          {placementLabel ? <span>{placementLabel}</span> : null}
         </div>
         <div className="masthead__actions">
-          <button type="button" className="button button--ghost" onClick={promptImport} disabled={isBusy}>
+          <button
+            type="button"
+            className={`button ${hasWorkingDocument ? "button--ghost" : ""}`}
+            onClick={promptImport}
+            disabled={isBusy}
+          >
             Import PDF
           </button>
-          <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!workingDocument}>
-            Save template
-          </button>
-          <button type="button" className="button" onClick={exportCurrentPdf} disabled={!canExport || isBusy}>
-            Export PDF
-          </button>
+          {hasWorkingDocument ? (
+            <>
+              <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!workingDocument}>
+                Save template
+              </button>
+              <button type="button" className="button" onClick={exportCurrentPdf} disabled={!canExport || isBusy}>
+                Export PDF
+              </button>
+            </>
+          ) : null}
         </div>
       </header>
 
       {notice ? <div className={`notice notice--${notice.tone}`}>{notice.message}</div> : null}
 
-      <main className="workspace">
-        <aside className="sidebar sidebar--library">
+      <main className={`workspace ${hasWorkingDocument ? "workspace--editing" : "workspace--empty"}`}>
+        {hasWorkingDocument ? (
+          <aside className="sidebar sidebar--library">
           <section className="panel panel--summary">
             <div className="panel__header">
               <h2>Document</h2>
@@ -917,9 +931,10 @@ export default function App() {
               ) : null}
             </div>
           </section>
-        </aside>
+          </aside>
+        ) : null}
 
-        <section className="editor">
+        <section className={`editor ${hasWorkingDocument ? "" : "editor--landing"}`}>
           {workingDocument && pdfDocumentProxy ? (
             <>
               <div className="editor__toolbar">
@@ -1010,7 +1025,9 @@ export default function App() {
               </div>
             </>
           ) : (
-              <div className="hero-empty">
+            <div className="landing-layout">
+              <div className="landing-main">
+                <div className="hero-empty">
                 <div className="hero-empty__card">
                   <p className="eyebrow">Desktop workflow</p>
                   <h2>Open, fill, sign, and export PDFs in one focused window.</h2>
@@ -1037,11 +1054,121 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+                </div>
               </div>
+              <div className="landing-aside">
+                <section className="panel">
+                  <div className="panel__header">
+                    <h2>Saved signatures</h2>
+                    <button
+                      type="button"
+                      className="button button--chip"
+                      onClick={() => setShowSignatureCreator((current) => !current)}
+                    >
+                      {showSignatureCreator ? "Close" : "New signature"}
+                    </button>
+                  </div>
+                  <p className="helper-copy">Save signatures once, then reuse them whenever you import a PDF.</p>
+                  {showSignatureCreator ? (
+                    <div className="stack signature-creator">
+                      <div className="segmented">
+                        <button
+                          type="button"
+                          className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
+                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
+                        >
+                          Upload
+                        </button>
+                        <button
+                          type="button"
+                          className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
+                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
+                        >
+                          Draw
+                        </button>
+                      </div>
+                      {signatureDraft.sourceType === "upload" ? (
+                        <label className="upload-box">
+                          <span>Upload PNG or JPG</span>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            onChange={async (event) => {
+                              const file = event.target.files?.[0];
+                              if (!file) {
+                                return;
+                              }
+
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                setSignatureDraft((current) => ({
+                                  ...current,
+                                  dataUrl: String(reader.result ?? "")
+                                }));
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                          {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
+                        </label>
+                      ) : (
+                        <SignaturePad
+                          initialDataUrl={signatureDraft.dataUrl}
+                          onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
+                        />
+                      )}
+                      <div className="panel__row-actions">
+                        <button type="button" className="button" onClick={saveSignatureProfile}>
+                          Save signature
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="signature-library">
+                    {store.signatureProfiles.map((profile) => (
+                      <button
+                        key={profile.id}
+                        type="button"
+                        className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
+                        onClick={() => activateSignatureProfile(profile.id)}
+                      >
+                        {signatureAssetCache[profile.assetRef] ? (
+                          <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} />
+                        ) : null}
+                        <div className="signature-card__meta">
+                          <strong>{profile.displayName}</strong>
+                          <span>Saved on this browser</span>
+                        </div>
+                      </button>
+                    ))}
+                    {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
+                  </div>
+                </section>
+
+                <section className="panel">
+                  <div className="panel__header">
+                    <h2>Recent exports</h2>
+                  </div>
+                  <div className="stack compact">
+                    {recentExports.map((entry) => (
+                      <div key={entry.id} className="history-card">
+                        <strong>{entry.outputName}</strong>
+                        <span>{entry.sourcePdfName}</span>
+                        <span>{HISTORY_DATE_FORMATTER.format(new Date(entry.createdAt))}</span>
+                      </div>
+                    ))}
+                    {recentExports.length === 0 ? (
+                      <p className="helper-copy">Your latest exported PDFs will appear here after the first export.</p>
+                    ) : null}
+                  </div>
+                </section>
+              </div>
+            </div>
           )}
         </section>
 
-        <aside className="sidebar sidebar--inspector">
+        {hasWorkingDocument ? (
+          <aside className="sidebar sidebar--inspector">
           <section className="panel">
             <div className="panel__header">
               <h2>Signatures</h2>
@@ -1369,7 +1496,8 @@ export default function App() {
               {store.templates.length === 0 ? <p className="helper-copy">Saved templates will appear here.</p> : null}
             </div>
           </section>
-        </aside>
+          </aside>
+        ) : null}
       </main>
 
       {isDragActive ? (

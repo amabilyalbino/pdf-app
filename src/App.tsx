@@ -805,7 +805,7 @@ export default function App() {
       <header className="masthead">
         <div className="masthead__brand">
           <strong>Ops PDF Studio</strong>
-          <span>{workingDocument ? workingDocument.importedPdf.name : "Ready to import"}</span>
+          <span>{workingDocument ? workingDocument.importedPdf.name : "Private PDF workspace"}</span>
         </div>
         <div className="masthead__status">
           <span>{desktopRuntime ? "Desktop app" : "Web app"}</span>
@@ -815,16 +815,11 @@ export default function App() {
           {placementLabel ? <span>{placementLabel}</span> : null}
         </div>
         <div className="masthead__actions">
-          <button
-            type="button"
-            className={`button ${hasWorkingDocument ? "button--ghost" : ""}`}
-            onClick={promptImport}
-            disabled={isBusy}
-          >
-            Import PDF
-          </button>
           {hasWorkingDocument ? (
             <>
+              <button type="button" className="button button--ghost" onClick={promptImport} disabled={isBusy}>
+                Import PDF
+              </button>
               <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!workingDocument}>
                 Save template
               </button>
@@ -1032,16 +1027,16 @@ export default function App() {
                   <p className="eyebrow">Desktop workflow</p>
                   <h2>Open, fill, sign, and export PDFs in one focused window.</h2>
                   <p>
-                    Drag the file here or import it manually. Signatures stay saved on this computer, and the app always creates a new PDF at the end.
+                    Built for fast document work. Add text, dates, checkboxes, and saved signatures without touching the original file.
                   </p>
                   <div className="hero-empty__grid">
                     <div className="guide-step is-active">
-                      <strong>1. Bring in the PDF</strong>
-                      <span>Import with the button or drop the file into the window.</span>
+                      <strong>1. Fill the document</strong>
+                      <span>Place visual fields exactly where they belong on the page.</span>
                     </div>
                     <div className="guide-step">
-                      <strong>2. Fill and sign</strong>
-                      <span>Add visual fields and use a saved signature with one click.</span>
+                      <strong>2. Reuse signatures</strong>
+                      <span>Keep signatures saved on this browser and place them with one click.</span>
                     </div>
                     <div className="guide-step">
                       <strong>3. Export a new file</strong>
@@ -1050,8 +1045,9 @@ export default function App() {
                   </div>
                   <div className="hero-empty__actions">
                     <button type="button" className="button" onClick={promptImport}>
-                      Import first PDF
+                      Open first PDF
                     </button>
+                    <p className="hero-empty__hint">You can also drag a PDF anywhere into the window.</p>
                   </div>
                 </div>
                 </div>

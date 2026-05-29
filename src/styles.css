@@ -422,6 +422,13 @@ button {
   margin-top: 24px;
 }
 
+.hero-empty__hint {
+  margin: 12px 0 0;
+  color: var(--muted-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
 .editor {
   display: flex;
   flex-direction: column;

@@ -55,45 +55,6 @@ After that, Vercel will give you a public URL such as:
 https://ops-pdf-studio.vercel.app
 ```
 
-## Secure login setup
-
-The web app is now designed to stay locked until a user signs in with an approved email.
-
-Create a Supabase project and configure these frontend environment variables:
-
-```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_PUBLISHABLE_KEY=
-VITE_ALLOWED_EMAILS=ops-manager@yourcompany.com
-```
-
-You can copy the template from:
-
-```text
-.env.example
-```
-
-### Supabase checklist
-
-1. Create a Supabase project.
-2. Turn on email auth / magic link sign-in.
-3. Add your redirect URLs in Supabase Auth:
-
-```text
-http://localhost:3000/**
-https://your-production-domain/**
-https://your-project.vercel.app/**
-```
-
-4. Add the environment variables in Vercel.
-5. Redeploy the app.
-
-Important:
-
-- `VITE_ALLOWED_EMAILS` is a frontend allowlist, so the approved email address is not secret
-- access still depends on control of that mailbox
-- never expose the Supabase `service_role` key in the frontend
-
 ## Push to GitHub
 
 If this folder is not a Git repository yet, run:
@@ -173,12 +134,12 @@ That means:
 - it works well from a URL
 - it does not automatically sync across computers
 - browser storage can be lost if local data is cleared
-- browser data is still local even after login, although it is now scoped to the signed-in user in web mode
 
 ## What to build next for a professional web version
 
 If you want a more production-ready online version, the next step is:
 
+- authentication
 - database-backed template storage
 - cloud storage for signature assets
 - permissions and access control

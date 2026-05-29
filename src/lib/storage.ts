@@ -9,7 +9,6 @@ import {
 import type { AppStore, SignatureDraft } from "../types";
 
 const STORAGE_KEY = "ops-pdf-studio-store";
-let webStorageScope = "anonymous";
 
 export const EMPTY_STORE: AppStore = {
   templates: [],
@@ -18,14 +17,6 @@ export const EMPTY_STORE: AppStore = {
   exportHistory: [],
   signatureAssets: {}
 };
-
-function buildStorageKey() {
-  return webStorageScope === "anonymous" ? STORAGE_KEY : `${STORAGE_KEY}:${webStorageScope}`;
-}
-
-export function setStorageScope(scope: string | null | undefined) {
-  webStorageScope = scope?.trim().toLowerCase() || "anonymous";
-}
 
 function normalizeStore(store: Partial<AppStore> | null | undefined): AppStore {
   return {
@@ -43,18 +34,8 @@ export async function loadStore(): Promise<AppStore> {
     return normalizeStore(store);
   }
 
-  const scopedStorageKey = buildStorageKey();
-  const raw = localStorage.getItem(scopedStorageKey);
+  const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    if (webStorageScope !== "anonymous") {
-      const legacyRaw = localStorage.getItem(STORAGE_KEY);
-      if (legacyRaw) {
-        const legacyStore = normalizeStore(JSON.parse(legacyRaw) as Partial<AppStore>);
-        localStorage.setItem(scopedStorageKey, JSON.stringify(legacyStore));
-        return legacyStore;
-      }
-    }
-
     return EMPTY_STORE;
   }
 
@@ -67,7 +48,7 @@ export async function saveStore(store: AppStore): Promise<void> {
     return;
   }
 
-  localStorage.setItem(buildStorageKey(), JSON.stringify(store));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
 }
 
 export async function persistSignatureAsset(store: AppStore, draft: SignatureDraft): Promise<{

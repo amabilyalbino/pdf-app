@@ -50,7 +50,19 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   signature: "signature"
 };
 
-export default function App() {
+type AppProps = {
+  authEmail?: string | null;
+  authProtected?: boolean;
+  authBypassed?: boolean;
+  onSignOut?: () => Promise<void>;
+};
+
+export default function App({
+  authEmail = null,
+  authProtected = false,
+  authBypassed = false,
+  onSignOut
+}: AppProps) {
   const desktopRuntime = isTauriApp();
   const [store, setStore] = useState<AppStore>(EMPTY_STORE);
   const [workingDocument, setWorkingDocument] = useState<WorkingDocument | null>(null);
@@ -808,6 +820,8 @@ export default function App() {
           <span>{workingDocument ? workingDocument.importedPdf.name : "Private PDF workspace"}</span>
         </div>
         <div className="masthead__status">
+          {authProtected && authEmail ? <span>{authEmail}</span> : null}
+          {authBypassed ? <span>Dev auth bypass</span> : null}
           <span>{desktopRuntime ? "Desktop app" : "Web app"}</span>
           <span>Local data</span>
           {workingDocument ? <span>Page {workingDocument.activePage + 1}</span> : null}
@@ -827,6 +841,11 @@ export default function App() {
                 Export PDF
               </button>
             </>
+          ) : null}
+          {authProtected && onSignOut ? (
+            <button type="button" className="button button--ghost" onClick={() => void onSignOut()}>
+              Sign out
+            </button>
           ) : null}
         </div>
       </header>

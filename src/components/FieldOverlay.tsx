@@ -231,19 +231,18 @@ export function FieldOverlay({
       {selected ? (
         <>
           <div className="field-box__toolbar">
-            <span className="field-box__toolbar-label">{field.type}</span>
             <button
               type="button"
               className="field-box__toolbar-handle"
               onPointerDown={(event) => beginDrag(event, "move")}
             >
-              Move
+              Drag
             </button>
-            <button type="button" className="button button--chip" onClick={onDuplicate}>
-              Duplicate
+            <button type="button" className="field-box__toolbar-action" onClick={onDuplicate}>
+              Copy
             </button>
-            <button type="button" className="button button--chip danger" onClick={onDelete}>
-              Remove
+            <button type="button" className="field-box__toolbar-action danger" onClick={onDelete}>
+              Delete
             </button>
           </div>
           <button

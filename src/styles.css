@@ -146,10 +146,14 @@ button {
 
 .workspace {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 320px;
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 12px;
   min-height: 0;
   flex: 1;
+}
+
+.workspace--with-inspector {
+  grid-template-columns: 320px minmax(0, 1fr) 320px;
 }
 
 .workspace--empty {
@@ -197,6 +201,12 @@ button {
   display: flex;
   justify-content: flex-start;
   margin: 12px 0;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .button {
@@ -557,6 +567,7 @@ button {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1;
 }
 
 .editor__toolbar-title {
@@ -571,10 +582,39 @@ button {
 .editor__toolbar-info {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 16px;
   color: var(--muted);
   font-size: 0.84rem;
   letter-spacing: 0.03em;
+}
+
+.toolstrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.tool-pill {
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line-strong);
+  background: #ffffff;
+  color: var(--ink);
+  font-size: 0.86rem;
+  transition: border-color 120ms ease, background 120ms ease, color 120ms ease;
+}
+
+.tool-pill:hover {
+  border-color: #111111;
+}
+
+.tool-pill.is-active {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
 }
 
 .segmented {
@@ -666,14 +706,14 @@ button {
 
 .field-box {
   position: absolute;
-  border: 1px dashed rgba(16, 16, 16, 0.14);
-  background: rgba(255, 255, 255, 0.12);
+  border: 1px dashed rgba(16, 16, 16, 0.12);
+  background: rgba(255, 255, 255, 0.08);
   transition: box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
 }
 
 .field-box.is-selected {
   border-color: rgba(17, 17, 17, 0.7);
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.16);
   box-shadow: 0 0 0 1px rgba(17, 17, 17, 0.08);
 }
 
@@ -745,45 +785,53 @@ button {
 
 .field-box__toolbar {
   position: absolute;
-  top: -46px;
-  left: 0;
+  top: -18px;
+  right: 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
-  border: 1px solid var(--line-strong);
+  gap: 6px;
+  padding: 4px 6px;
+  border: 1px solid rgba(16, 16, 16, 0.1);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.96);
+  background: rgba(255, 255, 255, 0.98);
   z-index: 4;
-}
-
-.field-box__toolbar-label {
-  padding: 0 8px;
-  color: var(--muted-soft);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  box-shadow: 0 10px 22px rgba(16, 16, 16, 0.08);
 }
 
 .field-box__toolbar-handle {
-  min-height: 32px;
-  padding: 0 12px;
-  border: 1px solid var(--line-strong);
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(16, 16, 16, 0.1);
   border-radius: 999px;
   background: #ffffff;
   color: var(--ink);
-  font-size: 0.8rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.02em;
+}
+
+.field-box__toolbar-action {
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.74rem;
+}
+
+.field-box__toolbar-action.danger {
+  color: var(--danger);
 }
 
 .field-box__resize {
   position: absolute;
-  right: -6px;
-  bottom: -6px;
-  width: 12px;
-  height: 12px;
-  border: 0;
+  right: -5px;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  border: 1px solid #111111;
   border-radius: 999px;
-  background: #111111;
+  background: #ffffff;
 }
 
 .field-grid {
@@ -985,6 +1033,10 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .workspace--with-inspector {
+    grid-template-columns: 1fr;
+  }
+
   .landing-layout {
     grid-template-columns: 1fr;
     height: auto;
@@ -1039,8 +1091,16 @@ select {
     align-items: flex-start;
   }
 
+  .editor__toolbar-info {
+    justify-content: flex-start;
+  }
+
   .inline-grid,
   .field-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-actions {
     grid-template-columns: 1fr;
   }
 }

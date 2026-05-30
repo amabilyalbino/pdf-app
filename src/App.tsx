@@ -11,7 +11,14 @@ import {
 } from "./lib/field";
 import { exportPdfDocument, importPdfFromFile } from "./lib/pdf";
 import { createId } from "./lib/id";
-import { EMPTY_STORE, loadStore, persistSignatureAsset, resolveSignatureAsset, saveStore } from "./lib/storage";
+import {
+  EMPTY_STORE,
+  loadStore,
+  persistSignatureAsset,
+  resolveSignatureAsset,
+  saveStore,
+  signaturePersistenceMode
+} from "./lib/storage";
 import { isTauriApp, saveBytesWithDialog } from "./lib/tauri";
 import { buildExportHistoryEntry, matchTemplates } from "./lib/templates";
 import type {
@@ -254,6 +261,7 @@ export default function App({
     ? store.signatureProfiles.find((profile) => profile.id === pendingSignatureProfileId) ?? null
     : null;
   const highlightedSignatureProfileId = selectedSignatureProfile?.id ?? pendingSignatureProfileId;
+  const sessionOnlySignatures = !desktopRuntime && signaturePersistenceMode === "session";
   const placementLabel =
     pendingFieldType === "signature" && pendingSignatureProfile
       ? `Placing ${pendingSignatureProfile.displayName.toLowerCase()}`
@@ -870,7 +878,9 @@ export default function App({
                   <span>
                     {desktopRuntime
                       ? "Signatures stay protected on this computer and the original PDF is never overwritten."
-                      : "Use the desktop build to deliver the final experience to the ops manager."}
+                      : sessionOnlySignatures
+                        ? "For security, web signatures are kept for the current signed-in session only."
+                        : "Use the desktop build to deliver the final experience to the ops manager."}
                   </span>
                 </div>
                 {suggestions.length > 0 ? (
@@ -1083,7 +1093,11 @@ export default function App({
                       {showSignatureCreator ? "Close" : "New signature"}
                     </button>
                   </div>
-                  <p className="helper-copy">Save signatures once, then reuse them whenever you import a PDF.</p>
+                  <p className="helper-copy">
+                    {sessionOnlySignatures
+                      ? "Web signatures stay available for the current signed-in session only."
+                      : "Save signatures once, then reuse them whenever you import a PDF."}
+                  </p>
                   {showSignatureCreator ? (
                     <div className="stack signature-creator">
                       <div className="segmented">
@@ -1152,7 +1166,7 @@ export default function App({
                         ) : null}
                         <div className="signature-card__meta">
                           <strong>{profile.displayName}</strong>
-                          <span>Saved on this browser</span>
+                          <span>{sessionOnlySignatures ? "Saved for this session" : "Saved on this browser"}</span>
                         </div>
                       </button>
                     ))}
@@ -1213,6 +1227,9 @@ export default function App({
             ) : (
               <p className="helper-copy">Click a saved signature to place it on the PDF, or create a new one.</p>
             )}
+            {sessionOnlySignatures ? (
+              <p className="helper-copy">For security, web signatures clear on sign-out and are not persisted across refreshes.</p>
+            ) : null}
             {showSignatureCreator ? (
               <div className="stack signature-creator">
                 <div className="segmented">
@@ -1297,7 +1314,9 @@ export default function App({
                         ? "Applied to field"
                         : pendingSignatureProfileId === profile.id
                           ? "Click the PDF to place"
-                          : "Click to use"}
+                          : sessionOnlySignatures
+                            ? "Saved for this session"
+                            : "Click to use"}
                     </span>
                   </div>
                 </button>

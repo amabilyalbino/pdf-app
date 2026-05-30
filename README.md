@@ -23,6 +23,18 @@ For now, the recommended hosting path is:
 2. import the repository into Vercel
 3. let Vercel deploy automatically on every push
 
+## Security posture
+
+The hosted web app now uses:
+
+- Supabase magic-link login with an approved email allowlist
+- explicit PKCE auth flow
+- Vercel security headers
+- session-only signature storage on the web by default
+- CI and Dependabot automation for safer ongoing maintenance
+
+See the full hardening checklist in [SECURITY.md](SECURITY.md).
+
 ## Online deployment
 
 The project is already prepared for static hosting.
@@ -122,18 +134,22 @@ src-tauri/target/release/bundle/
 
 ## Important limitation of the current web version
 
-In the current hosted version, these items are stored in the browser on that machine:
+In the current hosted version, these items remain stored in the browser on that machine:
 
-- saved signatures
 - templates
 - fill profiles
 - recent export history
+
+Signature assets are treated more strictly:
+
+- on the web, they are session-only by default
+- on desktop, they can stay stored locally through Tauri
 
 That means:
 
 - it works well from a URL
 - it does not automatically sync across computers
-- browser storage can be lost if local data is cleared
+- browser-local data can be lost if local data is cleared
 
 ## What to build next for a professional web version
 
@@ -150,6 +166,8 @@ Recommended stack for that phase:
 - `Supabase Auth` for login
 - `Supabase Storage` for signatures and assets
 - `Postgres` via Supabase for templates and history
+
+If you move signatures to the cloud later, use a private storage bucket plus RLS rather than putting them back into plain browser persistence.
 
 ## Packaging notes
 

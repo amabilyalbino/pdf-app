@@ -15,6 +15,37 @@ type AuthGateProps = {
   }) => ReactNode;
 };
 
+function removeAuthSearchParams() {
+  const url = new URL(window.location.href);
+  const authParamKeys = [
+    "code",
+    "error",
+    "error_code",
+    "error_description",
+    "access_token",
+    "refresh_token",
+    "expires_at",
+    "expires_in",
+    "provider_token",
+    "provider_refresh_token",
+    "token_type",
+    "type"
+  ];
+
+  let changed = false;
+  authParamKeys.forEach((key) => {
+    if (url.searchParams.has(key)) {
+      url.searchParams.delete(key);
+      changed = true;
+    }
+  });
+
+  if (changed) {
+    const nextUrl = `${url.pathname}${url.search}${url.hash}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  }
+}
+
 export function AuthGate({ children }: AuthGateProps) {
   const desktopRuntime = isTauriApp();
   const devBypassActive = import.meta.env.DEV && !hasProtectedAuthSetup;
@@ -42,10 +73,6 @@ export function AuthGate({ children }: AuthGateProps) {
 
     const client = supabase;
     let active = true;
-
-    function clearAuthUrl() {
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
 
     async function applySession(nextSession: Session | null) {
       const nextEmail = nextSession?.user?.email ? normalizeEmail(nextSession.user.email) : "";
@@ -80,13 +107,13 @@ export function AuthGate({ children }: AuthGateProps) {
         const authMessage = url.searchParams.get("error_description");
 
         if (authMessage) {
-          clearAuthUrl();
+          removeAuthSearchParams();
           setAuthError(authMessage);
         }
 
         if (authCode) {
           const { error } = await client.auth.exchangeCodeForSession(authCode);
-          clearAuthUrl();
+          removeAuthSearchParams();
           if (error) {
             throw error;
           }
@@ -149,7 +176,7 @@ export function AuthGate({ children }: AuthGateProps) {
       const { error } = await supabase.auth.signInWithOtp({
         email: normalizedEmail,
         options: {
-          emailRedirectTo: window.location.origin,
+          emailRedirectTo: new URL(window.location.pathname, window.location.origin).toString(),
           shouldCreateUser: true
         }
       });

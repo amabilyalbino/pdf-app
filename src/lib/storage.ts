@@ -10,6 +10,7 @@ import type { AppStore, SignatureDraft } from "../types";
 
 const STORAGE_KEY = "ops-pdf-studio-store";
 let webStorageScope = "anonymous";
+const webSignaturePersistenceEnabled = import.meta.env.VITE_WEB_SIGNATURE_PERSISTENCE === "true";
 
 export const EMPTY_STORE: AppStore = {
   templates: [],
@@ -18,6 +19,8 @@ export const EMPTY_STORE: AppStore = {
   exportHistory: [],
   signatureAssets: {}
 };
+
+export const signaturePersistenceMode = isTauriApp() || webSignaturePersistenceEnabled ? "persistent" : "session";
 
 function buildStorageKey() {
   return webStorageScope === "anonymous" ? STORAGE_KEY : `${STORAGE_KEY}:${webStorageScope}`;
@@ -37,6 +40,22 @@ function normalizeStore(store: Partial<AppStore> | null | undefined): AppStore {
   };
 }
 
+export function stripSensitiveSignatureData(store: AppStore): AppStore {
+  return {
+    ...store,
+    signatureProfiles: [],
+    signatureAssets: {}
+  };
+}
+
+export function shouldPersistSensitiveSignatureData() {
+  return isTauriApp() || webSignaturePersistenceEnabled;
+}
+
+export function sanitizeStoreForWebPersistence(store: AppStore): AppStore {
+  return shouldPersistSensitiveSignatureData() ? store : stripSensitiveSignatureData(store);
+}
+
 export async function loadStore(): Promise<AppStore> {
   if (isTauriApp()) {
     const store = await loadAppStoreViaTauri();
@@ -49,8 +68,9 @@ export async function loadStore(): Promise<AppStore> {
     if (webStorageScope !== "anonymous") {
       const legacyRaw = localStorage.getItem(STORAGE_KEY);
       if (legacyRaw) {
-        const legacyStore = normalizeStore(JSON.parse(legacyRaw) as Partial<AppStore>);
+        const legacyStore = sanitizeStoreForWebPersistence(normalizeStore(JSON.parse(legacyRaw) as Partial<AppStore>));
         localStorage.setItem(scopedStorageKey, JSON.stringify(legacyStore));
+        localStorage.removeItem(STORAGE_KEY);
         return legacyStore;
       }
     }
@@ -58,7 +78,14 @@ export async function loadStore(): Promise<AppStore> {
     return EMPTY_STORE;
   }
 
-  return normalizeStore(JSON.parse(raw) as Partial<AppStore>);
+  const normalizedStore = normalizeStore(JSON.parse(raw) as Partial<AppStore>);
+  const sanitizedStore = sanitizeStoreForWebPersistence(normalizedStore);
+
+  if (JSON.stringify(normalizedStore) !== JSON.stringify(sanitizedStore)) {
+    localStorage.setItem(scopedStorageKey, JSON.stringify(sanitizedStore));
+  }
+
+  return sanitizedStore;
 }
 
 export async function saveStore(store: AppStore): Promise<void> {
@@ -67,7 +94,7 @@ export async function saveStore(store: AppStore): Promise<void> {
     return;
   }
 
-  localStorage.setItem(buildStorageKey(), JSON.stringify(store));
+  localStorage.setItem(buildStorageKey(), JSON.stringify(sanitizeStoreForWebPersistence(store)));
 }
 
 export async function persistSignatureAsset(store: AppStore, draft: SignatureDraft): Promise<{

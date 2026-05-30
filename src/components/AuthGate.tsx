@@ -1,7 +1,7 @@
 import type { FormEvent, ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { isAllowedEmail, normalizeEmail } from "../lib/auth";
+import { getFriendlyAuthErrorMessage, isAllowedEmail, isRateLimitAuthErrorMessage, normalizeEmail } from "../lib/auth";
 import { setStorageScope } from "../lib/storage";
 import { allowedEmails, hasProtectedAuthSetup, hasSupabaseEnv, supabase } from "../lib/supabase";
 import { isTauriApp } from "../lib/tauri";
@@ -55,8 +55,20 @@ export function AuthGate({ children }: AuthGateProps) {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authNotice, setAuthNotice] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [clock, setClock] = useState(() => Date.now());
 
   const hasFullSetup = useMemo(() => hasProtectedAuthSetup, []);
+  const resendCooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - clock) / 1000));
+
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) {
+      return;
+    }
+
+    const interval = window.setInterval(() => setClock(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, [cooldownUntil]);
 
   useEffect(() => {
     if (desktopRuntime || devBypassActive) {
@@ -157,6 +169,11 @@ export function AuthGate({ children }: AuthGateProps) {
       return;
     }
 
+    if (resendCooldownSeconds > 0) {
+      setAuthError(`Wait ${resendCooldownSeconds}s before requesting another sign-in link.`);
+      return;
+    }
+
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail) {
       setAuthError("Enter your approved email to continue.");
@@ -185,9 +202,16 @@ export function AuthGate({ children }: AuthGateProps) {
         throw error;
       }
 
-      setAuthNotice(`Check ${normalizedEmail} for the secure sign-in link.`);
+      setCooldownUntil(Date.now() + 60_000);
+      setClock(Date.now());
+      setAuthNotice(`Check ${normalizedEmail} for the secure sign-in link. You can request a new one in about a minute.`);
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "Could not send the sign-in link.");
+      const nextMessage = getFriendlyAuthErrorMessage(error);
+      if (error instanceof Error && isRateLimitAuthErrorMessage(error.message)) {
+        setCooldownUntil(Date.now() + 60_000);
+        setClock(Date.now());
+      }
+      setAuthError(nextMessage);
     } finally {
       setIsSending(false);
     }
@@ -274,8 +298,12 @@ export function AuthGate({ children }: AuthGateProps) {
           {authError ? <div className="auth-message auth-message--error">{authError}</div> : null}
           {authNotice ? <div className="auth-message auth-message--success">{authNotice}</div> : null}
 
-          <button type="submit" className="button" disabled={isSending}>
-            {isSending ? "Sending link..." : "Send secure sign-in link"}
+          <button type="submit" className="button" disabled={isSending || resendCooldownSeconds > 0}>
+            {isSending
+              ? "Sending link..."
+              : resendCooldownSeconds > 0
+                ? `Try again in ${resendCooldownSeconds}s`
+                : "Send secure sign-in link"}
           </button>
         </form>
       </div>

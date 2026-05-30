@@ -64,6 +64,8 @@ type AppProps = {
   onSignOut?: () => Promise<void>;
 };
 
+type WorkspacePanel = "insert" | "signatures" | "profiles" | "templates";
+
 export default function App({
   authEmail = null,
   authProtected = false,
@@ -81,6 +83,7 @@ export default function App({
   const [isBusy, setIsBusy] = useState(false);
   const [signatureAssetCache, setSignatureAssetCache] = useState<Record<string, string>>({});
   const [selectedFillProfileId, setSelectedFillProfileId] = useState<string | null>(null);
+  const [workspacePanel, setWorkspacePanel] = useState<WorkspacePanel>("insert");
   const [pendingFieldType, setPendingFieldType] = useState<FieldType | null>(null);
   const [pendingSignatureProfileId, setPendingSignatureProfileId] = useState<string | null>(null);
   const [showSignatureCreator, setShowSignatureCreator] = useState(false);
@@ -313,6 +316,7 @@ export default function App({
       setSuggestions(templateSuggestions);
       setSelectedFieldId(null);
       setPendingFieldType(null);
+      setWorkspacePanel("insert");
 
       if (templateSuggestions[0] && templateSuggestions[0].score > 0.92) {
         applyTemplate(templateSuggestions[0].templateId, loadedPdf.importedPdf.id);
@@ -429,6 +433,7 @@ export default function App({
       return;
     }
 
+    setWorkspacePanel("insert");
     setPendingFieldType((current) => (current === type ? null : type));
     setPendingSignatureProfileId(null);
     setSelectedFieldId(null);
@@ -532,6 +537,7 @@ export default function App({
       };
     });
     setSelectedFieldId(hydratedFields[0]?.id ?? null);
+    setWorkspacePanel("templates");
 
     flash({
       tone: "success",
@@ -578,6 +584,7 @@ export default function App({
       ...workingDocument,
       appliedTemplateId: template.id
     });
+    setWorkspacePanel("templates");
 
     flash({
       tone: "success",
@@ -610,6 +617,7 @@ export default function App({
       fillProfiles: [profile, ...store.fillProfiles]
     });
     setSelectedFillProfileId(profile.id);
+    setWorkspacePanel("profiles");
   }
 
   function updateFillProfileValue(profileId: string, key: string, value: string) {
@@ -658,6 +666,7 @@ export default function App({
     }
 
     setShowSignatureCreator(false);
+    setWorkspacePanel("signatures");
 
     if (selectedField && selectedField.type === "signature") {
       updateField({
@@ -720,6 +729,7 @@ export default function App({
       dataUrl: ""
     });
     setShowSignatureCreator(false);
+    setWorkspacePanel("signatures");
 
     if (selectedField && selectedField.type === "signature") {
       updateField({
@@ -884,41 +894,13 @@ export default function App({
           <aside className="sidebar sidebar--library">
             <section className="panel panel--summary">
               <div className="panel__header">
-                <h2>Workflow</h2>
+                <h2>Document</h2>
               </div>
               <div className="stack compact">
                 <div className="meta-card meta-card--minimal">
                   <strong>{workingDocument?.importedPdf.name}</strong>
-                  <span>{workingDocument?.importedPdf.pageMappings.length} pages in the current document</span>
+                  <span>{workingDocument?.importedPdf.pageMappings.length} pages</span>
                 </div>
-                <div className={`guide-step ${workingDocument ? "is-complete" : "is-active"}`}>
-                  <strong>1. Document loaded</strong>
-                  <span>Keep the canvas in the center and switch PDFs from the header whenever needed.</span>
-                </div>
-                <div className={`guide-step ${hasAnyFields ? "is-complete" : "is-active"}`}>
-                  <strong>2. Add fields on the canvas</strong>
-                  <span>Select a tool above the document, then click directly where it should go.</span>
-                </div>
-                <div className={`guide-step ${canExport ? "is-complete" : "is-blocked"}`}>
-                  <strong>3. Export the final file</strong>
-                  <span>{canExport ? "The document is ready to export." : exportBlockers[0] ?? "Finish the required fields first."}</span>
-                </div>
-                {suggestions.length > 0 ? (
-                  <div className="stack compact">
-                    <p className="section-label">Suggested templates</p>
-                    {suggestions.slice(0, 3).map((suggestion) => (
-                      <button
-                        key={suggestion.templateId}
-                        type="button"
-                        className="suggestion-card"
-                        onClick={() => applyTemplate(suggestion.templateId)}
-                      >
-                        <strong>{suggestion.templateName}</strong>
-                        <span>{Math.round(suggestion.score * 100)}% match</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
                 <div className="quick-actions">
                   <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!workingDocument}>
                     Save template
@@ -927,158 +909,252 @@ export default function App({
                     Export PDF
                   </button>
                 </div>
+                <div className={`meta-status ${canExport ? "is-ready" : "is-warn"}`}>
+                  {canExport ? "Ready to export" : exportBlockers[0] ?? "Finish the required fields first."}
+                </div>
               </div>
             </section>
 
             <section className="panel">
-              <div className="panel__header">
-                <h2>Signatures</h2>
+              <div className="workspace-tabs" role="tablist" aria-label="Workspace sections">
                 <button
                   type="button"
-                  className="button button--chip"
-                  onClick={() => setShowSignatureCreator((current) => !current)}
+                  className={`workspace-tab ${workspacePanel === "insert" ? "is-active" : ""}`}
+                  onClick={() => setWorkspacePanel("insert")}
                 >
-                  {showSignatureCreator ? "Close" : "New signature"}
+                  Insert
+                </button>
+                <button
+                  type="button"
+                  className={`workspace-tab ${workspacePanel === "signatures" ? "is-active" : ""}`}
+                  onClick={() => setWorkspacePanel("signatures")}
+                >
+                  Sign
+                </button>
+                <button
+                  type="button"
+                  className={`workspace-tab ${workspacePanel === "profiles" ? "is-active" : ""}`}
+                  onClick={() => setWorkspacePanel("profiles")}
+                >
+                  Data
+                </button>
+                <button
+                  type="button"
+                  className={`workspace-tab ${workspacePanel === "templates" ? "is-active" : ""}`}
+                  onClick={() => setWorkspacePanel("templates")}
+                >
+                  Library
                 </button>
               </div>
-              <p className="helper-copy">
-                {sessionOnlySignatures
-                  ? "For security, signatures stay available only for this signed-in web session."
-                  : "Save signatures once, then place them directly on the document."}
-              </p>
-              {showSignatureCreator ? (
-                <div className="stack signature-creator">
-                  <div className="segmented">
+
+              {workspacePanel === "insert" ? (
+                <div className="stack compact">
+                  <div className="panel__header">
+                    <h2>Insert fields</h2>
+                  </div>
+                  <div className="field-grid">
+                    {FIELD_TYPES.map((item) => (
+                      <button
+                        key={item.type}
+                        type="button"
+                        className={`field-type-card ${pendingFieldType === item.type ? "is-active" : ""}`}
+                        onClick={() => beginFieldPlacement(item.type)}
+                      >
+                        <strong>{item.label}</strong>
+                        <span>{pendingFieldType === item.type ? "click on page" : "add to document"}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="helper-copy">Select a tool, then click exactly where it belongs on the page.</p>
+                  {suggestions.length > 0 ? (
+                    <div className="stack compact">
+                      <p className="section-label">Suggested templates</p>
+                      {suggestions.slice(0, 3).map((suggestion) => (
+                        <button
+                          key={suggestion.templateId}
+                          type="button"
+                          className="suggestion-card"
+                          onClick={() => applyTemplate(suggestion.templateId)}
+                        >
+                          <strong>{suggestion.templateName}</strong>
+                          <span>{Math.round(suggestion.score * 100)}% match</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {workspacePanel === "signatures" ? (
+                <div className="stack compact">
+                  <div className="panel__header">
+                    <h2>Saved signatures</h2>
                     <button
                       type="button"
-                      className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
-                      onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
+                      className="button button--chip"
+                      onClick={() => setShowSignatureCreator((current) => !current)}
                     >
-                      Upload
-                    </button>
-                    <button
-                      type="button"
-                      className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
-                      onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
-                    >
-                      Draw
+                      {showSignatureCreator ? "Close" : "New signature"}
                     </button>
                   </div>
-                  {signatureDraft.sourceType === "upload" ? (
-                    <label className="upload-box">
-                      <span>Upload PNG or JPG</span>
-                      <input
-                        type="file"
-                        accept="image/png,image/jpeg"
-                        onChange={async (event) => {
-                          const file = event.target.files?.[0];
-                          if (!file) {
-                            return;
-                          }
+                  <p className="helper-copy">
+                    {sessionOnlySignatures
+                      ? "For security, signatures stay available only for this signed-in web session."
+                      : "Save signatures once, then place them directly on the document."}
+                  </p>
+                  {showSignatureCreator ? (
+                    <div className="stack signature-creator">
+                      <div className="segmented">
+                        <button
+                          type="button"
+                          className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
+                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
+                        >
+                          Upload
+                        </button>
+                        <button
+                          type="button"
+                          className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
+                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
+                        >
+                          Draw
+                        </button>
+                      </div>
+                      {signatureDraft.sourceType === "upload" ? (
+                        <label className="upload-box">
+                          <span>Upload PNG or JPG</span>
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            onChange={async (event) => {
+                              const file = event.target.files?.[0];
+                              if (!file) {
+                                return;
+                              }
 
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            setSignatureDraft((current) => ({
-                              ...current,
-                              dataUrl: String(reader.result ?? "")
-                            }));
-                          };
-                          reader.readAsDataURL(file);
-                        }}
-                      />
-                      {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
-                    </label>
-                  ) : (
-                    <SignaturePad
-                      initialDataUrl={signatureDraft.dataUrl}
-                      onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
-                    />
-                  )}
-                  <div className="panel__row-actions">
-                    <button type="button" className="button" onClick={saveSignatureProfile}>
-                      Save signature
-                    </button>
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                setSignatureDraft((current) => ({
+                                  ...current,
+                                  dataUrl: String(reader.result ?? "")
+                                }));
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                          {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
+                        </label>
+                      ) : (
+                        <SignaturePad
+                          initialDataUrl={signatureDraft.dataUrl}
+                          onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
+                        />
+                      )}
+                      <div className="panel__row-actions">
+                        <button type="button" className="button" onClick={saveSignatureProfile}>
+                          Save signature
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                  <div className="signature-library">
+                    {store.signatureProfiles.map((profile) => (
+                      <button
+                        key={profile.id}
+                        type="button"
+                        className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
+                        onClick={() => activateSignatureProfile(profile.id)}
+                      >
+                        {signatureAssetCache[profile.assetRef] ? <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} /> : null}
+                        <div className="signature-card__meta">
+                          <strong>{profile.displayName}</strong>
+                          <span>
+                            {selectedSignatureField?.signatureProfileId === profile.id
+                              ? "Applied to selected field"
+                              : pendingSignatureProfileId === profile.id
+                                ? "Click on the page to place"
+                                : sessionOnlySignatures
+                                  ? "Saved for this session"
+                                  : "Click to place"}
+                          </span>
+                        </div>
+                      </button>
+                    ))}
+                    {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
                   </div>
                 </div>
               ) : null}
-              <div className="signature-library">
-                {store.signatureProfiles.map((profile) => (
-                  <button
-                    key={profile.id}
-                    type="button"
-                    className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
-                    onClick={() => activateSignatureProfile(profile.id)}
-                  >
-                    {signatureAssetCache[profile.assetRef] ? <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} /> : null}
-                    <div className="signature-card__meta">
-                      <strong>{profile.displayName}</strong>
-                      <span>
-                        {selectedSignatureField?.signatureProfileId === profile.id
-                          ? "Applied to selected field"
-                          : pendingSignatureProfileId === profile.id
-                            ? "Click on the page to place"
-                            : sessionOnlySignatures
-                              ? "Saved for this session"
-                              : "Click to place"}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-                {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
-              </div>
-            </section>
 
-            <section className="panel">
-              <div className="panel__header">
-                <h2>Reusable data</h2>
-                <button type="button" className="button button--chip" onClick={createFillProfile}>
-                  New profile
-                </button>
-              </div>
-              {store.fillProfiles.length > 0 ? (
+              {workspacePanel === "profiles" ? (
                 <div className="stack compact">
-                  <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
-                    {store.fillProfiles.map((profile) => (
-                      <option key={profile.id} value={profile.id}>
-                        {profile.name}
-                      </option>
-                    ))}
-                  </select>
-                  {selectedFillProfile ? (
-                    <>
-                      {selectedFillProfileKeys.map((key) => (
-                        <label key={key} className="form-field">
-                          <span>{key}</span>
-                          <input
-                            value={selectedFillProfile.values[key] ?? ""}
-                            onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
-                          />
-                        </label>
-                      ))}
-                      <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
-                        Apply profile to document
-                      </button>
-                    </>
-                  ) : null}
+                  <div className="panel__header">
+                    <h2>Reusable data</h2>
+                    <button type="button" className="button button--chip" onClick={createFillProfile}>
+                      New profile
+                    </button>
+                  </div>
+                  {store.fillProfiles.length > 0 ? (
+                    <div className="stack compact">
+                      <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
+                        {store.fillProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.name}
+                          </option>
+                        ))}
+                      </select>
+                      {selectedFillProfile ? (
+                        <>
+                          {selectedFillProfileKeys.map((key) => (
+                            <label key={key} className="form-field">
+                              <span>{key}</span>
+                              <input
+                                value={selectedFillProfile.values[key] ?? ""}
+                                onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
+                              />
+                            </label>
+                          ))}
+                          <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
+                            Apply profile to document
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="helper-copy">Save recurring company, address, or role data once and reuse it later.</p>
+                  )}
                 </div>
-              ) : (
-                <p className="helper-copy">Save recurring company, address, or role data once and reuse it later.</p>
-              )}
-            </section>
+              ) : null}
 
-            <section className="panel">
-              <div className="panel__header">
-                <h2>Templates</h2>
-              </div>
-              <div className="stack compact">
-                {store.templates.map((template) => (
-                  <button key={template.id} type="button" className="template-card" onClick={() => applyTemplate(template.id)}>
-                    <strong>{template.name}</strong>
-                    <span>{template.fieldDefinitions.length} field(s)</span>
-                  </button>
-                ))}
-                {store.templates.length === 0 ? <p className="helper-copy">Saved templates will appear here.</p> : null}
-              </div>
+              {workspacePanel === "templates" ? (
+                <div className="stack compact">
+                  <div className="panel__header">
+                    <h2>Templates</h2>
+                  </div>
+                  <div className="stack compact">
+                    {store.templates.map((template) => (
+                      <button key={template.id} type="button" className="template-card" onClick={() => applyTemplate(template.id)}>
+                        <strong>{template.name}</strong>
+                        <span>{template.fieldDefinitions.length} field(s)</span>
+                      </button>
+                    ))}
+                    {store.templates.length === 0 ? <p className="helper-copy">Saved templates will appear here.</p> : null}
+                  </div>
+                  <div className="library-divider" />
+                  <div className="panel__header">
+                    <h2>Recent exports</h2>
+                  </div>
+                  <div className="stack compact">
+                    {recentExports.map((entry) => (
+                      <div key={entry.id} className="history-card">
+                        <strong>{entry.outputName}</strong>
+                        <span>{entry.sourcePdfName}</span>
+                        <span>{HISTORY_DATE_FORMATTER.format(new Date(entry.createdAt))}</span>
+                      </div>
+                    ))}
+                    {recentExports.length === 0 ? <p className="helper-copy">Your latest exported PDFs will appear here.</p> : null}
+                  </div>
+                </div>
+              ) : null}
             </section>
           </aside>
         ) : null}

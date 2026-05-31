@@ -67,9 +67,7 @@ type AppProps = {
 type WorkspacePanel = "insert" | "signatures" | "profiles" | "templates";
 
 export default function App({
-  authEmail = null,
   authProtected = false,
-  authBypassed = false,
   onSignOut
 }: AppProps) {
   const desktopRuntime = isTauriApp();
@@ -271,7 +269,6 @@ export default function App({
 
   const canExport = workingDocument !== null && exportBlockers.length === 0;
   const hasAnyFields = (workingDocument?.fields.length ?? 0) > 0;
-  const recentExports = useMemo(() => store.exportHistory.slice(0, 4), [store.exportHistory]);
   const hasWorkingDocument = Boolean(workingDocument && pdfDocumentProxy);
   const selectedSignatureField = selectedField?.type === "signature" ? selectedField : null;
   const selectedSignatureProfile = selectedSignatureField?.signatureProfileId
@@ -282,13 +279,16 @@ export default function App({
     : null;
   const highlightedSignatureProfileId = selectedSignatureProfile?.id ?? pendingSignatureProfileId;
   const sessionOnlySignatures = !desktopRuntime && signaturePersistenceMode === "session";
-  const showInspectorSidebar = hasWorkingDocument && Boolean(selectedField);
   const placementLabel =
     pendingFieldType === "signature" && pendingSignatureProfile
       ? `Placing ${pendingSignatureProfile.displayName.toLowerCase()}`
       : pendingFieldType
         ? `Placing ${FIELD_TYPE_LABELS[pendingFieldType]}`
         : null;
+  const activePageMapping = workingDocument?.importedPdf.pageMappings[workingDocument.activePage] ?? null;
+  const workflowStage = !workingDocument || workingDocument.fields.length === 0 ? 1 : canExport ? 3 : 2;
+  const loadedWorkingDocument = hasWorkingDocument ? workingDocument : null;
+  const loadedPdfDocument = hasWorkingDocument ? pdfDocumentProxy : null;
 
   function flash(nextNotice: Notice) {
     setNotice(nextNotice);
@@ -850,31 +850,24 @@ export default function App({
         }}
       />
 
-      <header className="masthead">
-        <div className="masthead__brand">
+      <header className="topbar">
+        <div className="topbar__brand">
           <strong>Ops PDF Studio</strong>
-          <span>{workingDocument ? workingDocument.importedPdf.name : "Private PDF workspace"}</span>
+          <div className="topbar__document">
+            <span className="topbar__filename">{workingDocument ? workingDocument.importedPdf.name : "No document loaded"}</span>
+            {workingDocument ? <span className="topbar__meta">{workingDocument.importedPdf.pageMappings.length} pages</span> : null}
+          </div>
         </div>
-        <div className="masthead__status">
-          {authProtected && authEmail ? <span>{authEmail}</span> : null}
-          {authBypassed ? <span>Dev auth bypass</span> : null}
-          <span>{desktopRuntime ? "Desktop app" : "Web app"}</span>
-          {workingDocument ? <span>{workingDocument.importedPdf.pageMappings.length} pages</span> : null}
-        </div>
-        <div className="masthead__actions">
-          {hasWorkingDocument ? (
-            <>
-              <button type="button" className="button button--ghost" onClick={promptImport} disabled={isBusy}>
-                Import PDF
-              </button>
-              <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!workingDocument}>
-                Save template
-              </button>
-              <button type="button" className="button" onClick={exportCurrentPdf} disabled={!canExport || isBusy}>
-                Export PDF
-              </button>
-            </>
-          ) : null}
+        <div className="topbar__actions">
+          <button type="button" className="button button--ghost" onClick={promptImport} disabled={isBusy}>
+            Import PDF
+          </button>
+          <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!hasAnyFields}>
+            Save Template
+          </button>
+          <button type="button" className="button" onClick={exportCurrentPdf} disabled={!canExport || isBusy}>
+            Export PDF
+          </button>
           {authProtected && onSignOut ? (
             <button type="button" className="button button--ghost" onClick={() => void onSignOut()}>
               Sign out
@@ -885,251 +878,217 @@ export default function App({
 
       {notice ? <div className={`notice notice--${notice.tone}`}>{notice.message}</div> : null}
 
-      <main
-        className={`workspace ${
-          hasWorkingDocument ? (showInspectorSidebar ? "workspace--with-inspector" : "workspace--editing") : "workspace--empty"
-        }`}
-      >
-        {hasWorkingDocument ? (
-          <aside className="sidebar sidebar--library">
-            <section className="panel panel--summary">
-              <div className="panel__header">
-                <h2>Document</h2>
-              </div>
-              <div className="stack compact">
-                <div className="meta-card meta-card--minimal">
-                  <strong>{workingDocument?.importedPdf.name}</strong>
-                  <span>{workingDocument?.importedPdf.pageMappings.length} pages</span>
+      <main className={`workspace ${hasWorkingDocument ? "workspace--loaded" : "workspace--empty"}`}>
+        {loadedWorkingDocument && loadedPdfDocument ? (
+          <>
+            <aside className="sidebar sidebar--left">
+              <section className="panel panel--focus">
+                <div className="panel__header">
+                  <h2>Document</h2>
                 </div>
-                <div className="quick-actions">
-                  <button type="button" className="button button--ghost" onClick={saveCurrentTemplate} disabled={!workingDocument}>
-                    Save template
-                  </button>
-                  <button type="button" className="button" onClick={exportCurrentPdf} disabled={!canExport || isBusy}>
-                    Export PDF
-                  </button>
-                </div>
-                <div className={`meta-status ${canExport ? "is-ready" : "is-warn"}`}>
-                  {canExport ? "Ready to export" : exportBlockers[0] ?? "Finish the required fields first."}
-                </div>
-              </div>
-            </section>
-
-            <section className="panel">
-              <div className="workspace-tabs" role="tablist" aria-label="Workspace sections">
-                <button
-                  type="button"
-                  className={`workspace-tab ${workspacePanel === "insert" ? "is-active" : ""}`}
-                  onClick={() => setWorkspacePanel("insert")}
-                >
-                  Insert
-                </button>
-                <button
-                  type="button"
-                  className={`workspace-tab ${workspacePanel === "signatures" ? "is-active" : ""}`}
-                  onClick={() => setWorkspacePanel("signatures")}
-                >
-                  Sign
-                </button>
-                <button
-                  type="button"
-                  className={`workspace-tab ${workspacePanel === "profiles" ? "is-active" : ""}`}
-                  onClick={() => setWorkspacePanel("profiles")}
-                >
-                  Data
-                </button>
-                <button
-                  type="button"
-                  className={`workspace-tab ${workspacePanel === "templates" ? "is-active" : ""}`}
-                  onClick={() => setWorkspacePanel("templates")}
-                >
-                  Library
-                </button>
-              </div>
-
-              {workspacePanel === "insert" ? (
                 <div className="stack compact">
-                  <div className="panel__header">
-                    <h2>Insert fields</h2>
+                  <div className="meta-card meta-card--minimal">
+                    <strong>{loadedWorkingDocument.importedPdf.name}</strong>
+                    <span>{loadedWorkingDocument.importedPdf.pageMappings.length} pages</span>
                   </div>
-                  <div className="field-grid">
-                    {FIELD_TYPES.map((item) => (
-                      <button
-                        key={item.type}
-                        type="button"
-                        className={`field-type-card ${pendingFieldType === item.type ? "is-active" : ""}`}
-                        onClick={() => beginFieldPlacement(item.type)}
-                      >
-                        <strong>{item.label}</strong>
-                        <span>{pendingFieldType === item.type ? "click on page" : "add to document"}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="helper-copy">Select a tool, then click exactly where it belongs on the page.</p>
-                  {suggestions.length > 0 ? (
-                    <div className="stack compact">
-                      <p className="section-label">Suggested templates</p>
-                      {suggestions.slice(0, 3).map((suggestion) => (
-                        <button
-                          key={suggestion.templateId}
-                          type="button"
-                          className="suggestion-card"
-                          onClick={() => applyTemplate(suggestion.templateId)}
-                        >
-                          <strong>{suggestion.templateName}</strong>
-                          <span>{Math.round(suggestion.score * 100)}% match</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
                 </div>
-              ) : null}
+              </section>
 
-              {workspacePanel === "signatures" ? (
+              <section className="panel">
+                <div className="panel__header">
+                  <h2>Workflow</h2>
+                </div>
                 <div className="stack compact">
-                  <div className="panel__header">
-                    <h2>Saved signatures</h2>
+                  <div className={`guide-step ${workflowStage === 1 ? "is-active" : workflowStage > 1 ? "is-complete" : ""}`}>
+                    <strong>1. Add fields</strong>
+                    <span>Choose a tool and click on the document to place it.</span>
+                  </div>
+                  <div className={`guide-step ${workflowStage === 2 ? "is-active" : workflowStage > 2 ? "is-complete" : ""}`}>
+                    <strong>2. Review</strong>
+                    <span>Check values, signatures, and field placement before exporting.</span>
+                  </div>
+                  <div className={`guide-step ${workflowStage === 3 ? "is-active" : ""}`}>
+                    <strong>3. Export</strong>
+                    <span>{canExport ? "Ready to export." : exportBlockers[0] ?? "Finish the required fields first."}</span>
+                  </div>
+                </div>
+              </section>
+
+              <section className={`panel ${workspacePanel === "insert" ? "panel--focus" : ""}`}>
+                <div className="panel__header">
+                  <h2>Tools</h2>
+                </div>
+                <div className="field-grid">
+                  {FIELD_TYPES.map((item) => (
                     <button
+                      key={item.type}
                       type="button"
-                      className="button button--chip"
-                      onClick={() => setShowSignatureCreator((current) => !current)}
+                      className={`field-type-card ${pendingFieldType === item.type ? "is-active" : ""}`}
+                      onClick={() => beginFieldPlacement(item.type)}
                     >
-                      {showSignatureCreator ? "Close" : "New signature"}
+                      <strong>{item.label}</strong>
+                      <span>{pendingFieldType === item.type ? "selected" : "place on page"}</span>
                     </button>
-                  </div>
-                  <p className="helper-copy">
-                    {sessionOnlySignatures
-                      ? "For security, signatures stay available only for this signed-in web session."
-                      : "Save signatures once, then place them directly on the document."}
-                  </p>
-                  {showSignatureCreator ? (
-                    <div className="stack signature-creator">
-                      <div className="segmented">
-                        <button
-                          type="button"
-                          className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
-                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
-                        >
-                          Upload
-                        </button>
-                        <button
-                          type="button"
-                          className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
-                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
-                        >
-                          Draw
-                        </button>
-                      </div>
-                      {signatureDraft.sourceType === "upload" ? (
-                        <label className="upload-box">
-                          <span>Upload PNG or JPG</span>
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg"
-                            onChange={async (event) => {
-                              const file = event.target.files?.[0];
-                              if (!file) {
-                                return;
-                              }
+                  ))}
+                </div>
+                <p className="helper-copy">Select a tool, then click directly on the PDF to place it.</p>
+              </section>
 
-                              const reader = new FileReader();
-                              reader.onload = () => {
-                                setSignatureDraft((current) => ({
-                                  ...current,
-                                  dataUrl: String(reader.result ?? "")
-                                }));
-                              };
-                              reader.readAsDataURL(file);
-                            }}
-                          />
-                          {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
-                        </label>
-                      ) : (
-                        <SignaturePad
-                          initialDataUrl={signatureDraft.dataUrl}
-                          onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
-                        />
-                      )}
-                      <div className="panel__row-actions">
-                        <button type="button" className="button" onClick={saveSignatureProfile}>
-                          Save signature
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div className="signature-library">
-                    {store.signatureProfiles.map((profile) => (
+              <section className={`panel ${workspacePanel === "signatures" ? "panel--focus" : ""}`}>
+                <div className="panel__header">
+                  <h2>Signatures</h2>
+                  <button
+                    type="button"
+                    className="button button--chip"
+                    onClick={() => setShowSignatureCreator((current) => !current)}
+                  >
+                    {showSignatureCreator ? "Close" : "New signature"}
+                  </button>
+                </div>
+                <p className="helper-copy">
+                  {sessionOnlySignatures
+                    ? "For security, signatures stay available only for this signed-in session."
+                    : "Save signatures once, then place them directly on the document."}
+                </p>
+                {showSignatureCreator ? (
+                  <div className="stack signature-creator">
+                    <div className="segmented">
                       <button
-                        key={profile.id}
                         type="button"
-                        className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
-                        onClick={() => activateSignatureProfile(profile.id)}
+                        className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
+                        onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
                       >
-                        {signatureAssetCache[profile.assetRef] ? <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} /> : null}
-                        <div className="signature-card__meta">
-                          <strong>{profile.displayName}</strong>
-                          <span>
-                            {selectedSignatureField?.signatureProfileId === profile.id
-                              ? "Applied to selected field"
-                              : pendingSignatureProfileId === profile.id
-                                ? "Click on the page to place"
-                                : sessionOnlySignatures
-                                  ? "Saved for this session"
-                                  : "Click to place"}
-                          </span>
-                        </div>
+                        Upload
+                      </button>
+                      <button
+                        type="button"
+                        className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
+                        onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
+                      >
+                        Draw
+                      </button>
+                    </div>
+                    {signatureDraft.sourceType === "upload" ? (
+                      <label className="upload-box">
+                        <span>Upload PNG or JPG</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={async (event) => {
+                            const file = event.target.files?.[0];
+                            if (!file) {
+                              return;
+                            }
+
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setSignatureDraft((current) => ({
+                                ...current,
+                                dataUrl: String(reader.result ?? "")
+                              }));
+                            };
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
+                      </label>
+                    ) : (
+                      <SignaturePad
+                        initialDataUrl={signatureDraft.dataUrl}
+                        onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
+                      />
+                    )}
+                    <div className="panel__row-actions">
+                      <button type="button" className="button" onClick={saveSignatureProfile}>
+                        Save signature
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+                <div className="signature-library">
+                  {store.signatureProfiles.map((profile) => (
+                    <button
+                      key={profile.id}
+                      type="button"
+                      className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
+                      onClick={() => activateSignatureProfile(profile.id)}
+                    >
+                      {signatureAssetCache[profile.assetRef] ? <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} /> : null}
+                      <div className="signature-card__meta">
+                        <strong>{profile.displayName}</strong>
+                        <span>
+                          {selectedSignatureField?.signatureProfileId === profile.id
+                            ? "Applied to selected field"
+                            : pendingSignatureProfileId === profile.id
+                              ? "Click on the page to place"
+                              : sessionOnlySignatures
+                                ? "Saved for this session"
+                                : "Ready to use"}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                  {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
+                </div>
+              </section>
+
+              <section className={`panel ${workspacePanel === "profiles" ? "panel--focus" : ""}`}>
+                <div className="panel__header">
+                  <h2>Reusable data</h2>
+                  <button type="button" className="button button--chip" onClick={createFillProfile}>
+                    New profile
+                  </button>
+                </div>
+                {store.fillProfiles.length > 0 ? (
+                  <div className="stack compact">
+                    <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
+                      {store.fillProfiles.map((profile) => (
+                        <option key={profile.id} value={profile.id}>
+                          {profile.name}
+                        </option>
+                      ))}
+                    </select>
+                    {selectedFillProfile ? (
+                      <>
+                        {selectedFillProfileKeys.map((key) => (
+                          <label key={key} className="form-field">
+                            <span>{key}</span>
+                            <input
+                              value={selectedFillProfile.values[key] ?? ""}
+                              onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
+                            />
+                          </label>
+                        ))}
+                        <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
+                          Apply profile
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="helper-copy">Save recurring company, address, or role data once and reuse it later.</p>
+                )}
+              </section>
+
+              <section className={`panel ${workspacePanel === "templates" ? "panel--focus" : ""}`}>
+                <div className="panel__header">
+                  <h2>Templates</h2>
+                </div>
+                {suggestions.length > 0 ? (
+                  <div className="stack compact">
+                    {suggestions.slice(0, 3).map((suggestion) => (
+                      <button
+                        key={suggestion.templateId}
+                        type="button"
+                        className="suggestion-card"
+                        onClick={() => applyTemplate(suggestion.templateId)}
+                      >
+                        <strong>{suggestion.templateName}</strong>
+                        <span>{Math.round(suggestion.score * 100)}% match</span>
                       </button>
                     ))}
-                    {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
                   </div>
-                </div>
-              ) : null}
-
-              {workspacePanel === "profiles" ? (
-                <div className="stack compact">
-                  <div className="panel__header">
-                    <h2>Reusable data</h2>
-                    <button type="button" className="button button--chip" onClick={createFillProfile}>
-                      New profile
-                    </button>
-                  </div>
-                  {store.fillProfiles.length > 0 ? (
-                    <div className="stack compact">
-                      <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
-                        {store.fillProfiles.map((profile) => (
-                          <option key={profile.id} value={profile.id}>
-                            {profile.name}
-                          </option>
-                        ))}
-                      </select>
-                      {selectedFillProfile ? (
-                        <>
-                          {selectedFillProfileKeys.map((key) => (
-                            <label key={key} className="form-field">
-                              <span>{key}</span>
-                              <input
-                                value={selectedFillProfile.values[key] ?? ""}
-                                onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
-                              />
-                            </label>
-                          ))}
-                          <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
-                            Apply profile to document
-                          </button>
-                        </>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <p className="helper-copy">Save recurring company, address, or role data once and reuse it later.</p>
-                  )}
-                </div>
-              ) : null}
-
-              {workspacePanel === "templates" ? (
-                <div className="stack compact">
-                  <div className="panel__header">
-                    <h2>Templates</h2>
-                  </div>
+                ) : store.templates.length > 0 ? (
                   <div className="stack compact">
                     {store.templates.map((template) => (
                       <button key={template.id} type="button" className="template-card" onClick={() => applyTemplate(template.id)}>
@@ -1137,59 +1096,26 @@ export default function App({
                         <span>{template.fieldDefinitions.length} field(s)</span>
                       </button>
                     ))}
-                    {store.templates.length === 0 ? <p className="helper-copy">Saved templates will appear here.</p> : null}
                   </div>
-                  <div className="library-divider" />
-                  <div className="panel__header">
-                    <h2>Recent exports</h2>
-                  </div>
-                  <div className="stack compact">
-                    {recentExports.map((entry) => (
-                      <div key={entry.id} className="history-card">
-                        <strong>{entry.outputName}</strong>
-                        <span>{entry.sourcePdfName}</span>
-                        <span>{HISTORY_DATE_FORMATTER.format(new Date(entry.createdAt))}</span>
-                      </div>
-                    ))}
-                    {recentExports.length === 0 ? <p className="helper-copy">Your latest exported PDFs will appear here.</p> : null}
-                  </div>
-                </div>
-              ) : null}
-            </section>
-          </aside>
-        ) : null}
+                ) : (
+                  <p className="helper-copy">Saved templates will appear here.</p>
+                )}
+              </section>
+            </aside>
 
-        <section className={`editor ${hasWorkingDocument ? "" : "editor--landing"}`}>
-          {workingDocument && pdfDocumentProxy ? (
-            <>
-              <div className="editor__toolbar">
-                <div className="editor__toolbar-head">
-                  <p className="eyebrow">Canvas</p>
-                  <h2 className="editor__toolbar-title">
-                    {pendingFieldType
-                      ? pendingFieldType === "signature" && pendingSignatureProfile
-                        ? `Click once on the page to place ${pendingSignatureProfile.displayName.toLowerCase()}.`
-                        : `Click once on the page to place the ${FIELD_TYPE_LABELS[pendingFieldType]}.`
-                      : "Choose a tool, then place it directly on the document."}
+            <section className="editor-surface">
+              <div className="canvas-header">
+                <div className="canvas-header__title">
+                  <p className="eyebrow">PDF canvas</p>
+                  <h2>
+                    Page {loadedWorkingDocument.activePage + 1}
+                    {activePageMapping ? ` of ${loadedWorkingDocument.importedPdf.pageMappings.length}` : ""}
                   </h2>
-                  <div className="toolstrip" role="toolbar" aria-label="Document tools">
-                    {FIELD_TYPES.map((item) => (
-                      <button
-                        key={item.type}
-                        type="button"
-                        className={`tool-pill ${pendingFieldType === item.type ? "is-active" : ""}`}
-                        onClick={() => beginFieldPlacement(item.type)}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </div>
                 </div>
-                <div className="editor__toolbar-info">
-                  <span>Page {workingDocument.activePage + 1}</span>
+                <div className="canvas-header__meta">
                   <span>{activePageFields.length} field(s) on this page</span>
-                  <span>{workingDocument.fields.length} total</span>
-                  {placementLabel ? <span>{placementLabel}</span> : null}
+                  <span>{loadedWorkingDocument.fields.length} total field(s)</span>
+                  {placementLabel ? <span className="canvas-status">{placementLabel}</span> : null}
                   {pendingFieldType ? (
                     <button type="button" className="button button--chip" onClick={clearPendingPlacement}>
                       Cancel
@@ -1200,9 +1126,9 @@ export default function App({
 
               <div className="page-stage" ref={pageStageRef}>
                 <div className="page-stack">
-                  {workingDocument.importedPdf.pageMappings.map((mapping) => {
-                    const pageFields = workingDocument.fields.filter((field) => field.page === mapping.page);
-                    const isActivePage = workingDocument.activePage === mapping.page;
+                  {loadedWorkingDocument.importedPdf.pageMappings.map((mapping) => {
+                    const pageFields = loadedWorkingDocument.fields.filter((field) => field.page === mapping.page);
+                    const isActivePage = loadedWorkingDocument.activePage === mapping.page;
 
                     return (
                       <section
@@ -1226,7 +1152,7 @@ export default function App({
                         <div className="page-frame">
                           <div className="page-sheet">
                             <PdfPageCanvas
-                              documentProxy={pdfDocumentProxy}
+                              documentProxy={loadedPdfDocument}
                               pageIndex={mapping.page}
                               width={mapping.width}
                               height={mapping.height}
@@ -1261,304 +1187,221 @@ export default function App({
                   })}
                 </div>
               </div>
-            </>
-          ) : (
-            <div className="landing-layout">
-              <div className="landing-main">
-                <div className="hero-empty">
-                <div className="hero-empty__card">
-                  <p className="eyebrow">Desktop workflow</p>
-                  <h2>Open, fill, sign, and export PDFs in one focused window.</h2>
-                  <p>
-                    Built for fast document work. Add text, dates, checkboxes, and saved signatures without touching the original file.
-                  </p>
-                  <div className="hero-empty__grid">
-                    <div className="guide-step is-active">
-                      <strong>1. Fill the document</strong>
-                      <span>Place visual fields exactly where they belong on the page.</span>
-                    </div>
-                    <div className="guide-step">
-                      <strong>2. Reuse signatures</strong>
+            </section>
+
+            <aside className="sidebar sidebar--right">
+              <section className="panel">
+                <div className="panel__header">
+                  <h2>Field settings</h2>
+                </div>
+                {selectedField ? (
+                  <div className="stack">
+                    <div className="meta-card meta-card--minimal">
+                      <strong>{FIELD_TYPE_LABELS[selectedField.type].replace(/^\w/, (character) => character.toUpperCase())} field</strong>
                       <span>
-                        {sessionOnlySignatures
-                          ? "Create signatures once for this session and place them with one click."
-                          : "Keep signatures saved on this browser and place them with one click."}
+                        {selectedField.type === "signature"
+                          ? selectedField.signatureProfileId
+                            ? "Signature assigned"
+                            : "Needs a signature"
+                          : selectedField.type === "checkbox"
+                            ? selectedField.checked
+                              ? "Checked"
+                              : "Unchecked"
+                            : selectedField.value
+                              ? "Ready"
+                              : "Empty"}
                       </span>
                     </div>
-                    <div className="guide-step">
-                      <strong>3. Export a new file</strong>
-                      <span>The original stays untouched and your recent history remains in the app.</span>
-                    </div>
-                  </div>
-                  <div className="hero-empty__actions">
-                    <button type="button" className="button" onClick={promptImport}>
-                      Open first PDF
-                    </button>
-                    <p className="hero-empty__hint">You can also drag a PDF anywhere into the window.</p>
-                  </div>
-                </div>
-                </div>
-              </div>
-              <div className="landing-aside">
-                <section className="panel">
-                  <div className="panel__header">
-                    <h2>Saved signatures</h2>
-                    <button
-                      type="button"
-                      className="button button--chip"
-                      onClick={() => setShowSignatureCreator((current) => !current)}
-                    >
-                      {showSignatureCreator ? "Close" : "New signature"}
-                    </button>
-                  </div>
-                  <p className="helper-copy">
-                    {sessionOnlySignatures
-                      ? "Web signatures stay available for the current signed-in session only."
-                      : "Save signatures once, then reuse them whenever you import a PDF."}
-                  </p>
-                  {showSignatureCreator ? (
-                    <div className="stack signature-creator">
-                      <div className="segmented">
-                        <button
-                          type="button"
-                          className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
-                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
-                        >
-                          Upload
-                        </button>
-                        <button
-                          type="button"
-                          className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
-                          onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
-                        >
-                          Draw
-                        </button>
-                      </div>
-                      {signatureDraft.sourceType === "upload" ? (
-                        <label className="upload-box">
-                          <span>Upload PNG or JPG</span>
-                          <input
-                            type="file"
-                            accept="image/png,image/jpeg"
-                            onChange={async (event) => {
-                              const file = event.target.files?.[0];
-                              if (!file) {
-                                return;
-                              }
 
-                              const reader = new FileReader();
-                              reader.onload = () => {
-                                setSignatureDraft((current) => ({
-                                  ...current,
-                                  dataUrl: String(reader.result ?? "")
-                                }));
-                              };
-                              reader.readAsDataURL(file);
-                            }}
-                          />
-                          {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
-                        </label>
-                      ) : (
-                        <SignaturePad
-                          initialDataUrl={signatureDraft.dataUrl}
-                          onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
-                        />
-                      )}
-                      <div className="panel__row-actions">
-                        <button type="button" className="button" onClick={saveSignatureProfile}>
-                          Save signature
-                        </button>
-                      </div>
-                    </div>
-                  ) : null}
-                  <div className="signature-library">
-                    {store.signatureProfiles.map((profile) => (
-                      <button
-                        key={profile.id}
-                        type="button"
-                        className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
-                        onClick={() => activateSignatureProfile(profile.id)}
-                      >
-                        {signatureAssetCache[profile.assetRef] ? (
-                          <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} />
+                    {selectedField.type === "signature" ? (
+                      <div className="context-banner">
+                        <strong>Signature field</strong>
+                        <span>
+                          {selectedField.signatureProfileId
+                            ? "Use the signatures panel to swap or remove this signature."
+                            : "Choose a saved signature from the left to fill this field."}
+                        </span>
+                        {selectedField.signatureProfileId ? (
+                          <button type="button" className="button button--chip" onClick={clearSelectedSignatureField}>
+                            Remove signature
+                          </button>
                         ) : null}
-                        <div className="signature-card__meta">
-                          <strong>{profile.displayName}</strong>
-                          <span>{sessionOnlySignatures ? "Saved for this session" : "Saved on this browser"}</span>
-                        </div>
-                      </button>
-                    ))}
-                    {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
-                  </div>
-                </section>
-
-                <section className="panel">
-                  <div className="panel__header">
-                    <h2>Recent exports</h2>
-                  </div>
-                  <div className="stack compact">
-                    {recentExports.map((entry) => (
-                      <div key={entry.id} className="history-card">
-                        <strong>{entry.outputName}</strong>
-                        <span>{entry.sourcePdfName}</span>
-                        <span>{HISTORY_DATE_FORMATTER.format(new Date(entry.createdAt))}</span>
                       </div>
-                    ))}
-                    {recentExports.length === 0 ? (
-                      <p className="helper-copy">Your latest exported PDFs will appear here after the first export.</p>
+                    ) : selectedField.type === "checkbox" ? (
+                      <label className="toggle-row">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(selectedField.checked)}
+                          onChange={(event) =>
+                            updateField({
+                              ...selectedField,
+                              checked: event.target.checked
+                            })
+                          }
+                        />
+                        <span>Checked</span>
+                      </label>
+                    ) : (
+                      <label className="form-field">
+                        <span>{selectedField.type === "date" ? "Value" : "Label or value"}</span>
+                        <input
+                          value={selectedField.value ?? ""}
+                          onChange={(event) => updateField({ ...selectedField, value: event.target.value })}
+                        />
+                      </label>
+                    )}
+
+                    <div className="inline-grid">
+                      <label className="form-field">
+                        <span>Width</span>
+                        <input
+                          type="number"
+                          min={0.04}
+                          max={1}
+                          step={0.01}
+                          value={selectedField.width}
+                          onChange={(event) =>
+                            updateField({
+                              ...selectedField,
+                              width: Number(event.target.value)
+                            })
+                          }
+                        />
+                      </label>
+                      <label className="form-field">
+                        <span>Height</span>
+                        <input
+                          type="number"
+                          min={0.03}
+                          max={1}
+                          step={0.01}
+                          value={selectedField.height}
+                          onChange={(event) =>
+                            updateField({
+                              ...selectedField,
+                              height: Number(event.target.value)
+                            })
+                          }
+                        />
+                      </label>
+                    </div>
+
+                    {selectedField.type !== "checkbox" && selectedField.type !== "signature" ? (
+                      <>
+                        <div className="inline-grid">
+                          <label className="form-field">
+                            <span>Font size</span>
+                            <input
+                              type="number"
+                              min={10}
+                              max={32}
+                              value={selectedField.style.fontSize}
+                              onChange={(event) =>
+                                updateField({
+                                  ...selectedField,
+                                  style: {
+                                    ...selectedField.style,
+                                    fontSize: Number(event.target.value)
+                                  }
+                                })
+                              }
+                            />
+                          </label>
+                          <label className="form-field">
+                            <span>Text color</span>
+                            <input
+                              type="color"
+                              value={selectedField.style.color}
+                              onChange={(event) =>
+                                updateField({
+                                  ...selectedField,
+                                  style: {
+                                    ...selectedField.style,
+                                    color: event.target.value
+                                  }
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                        <label className="toggle-row">
+                          <input
+                            type="checkbox"
+                            checked={selectedField.style.bold}
+                            onChange={(event) =>
+                              updateField({
+                                ...selectedField,
+                                style: {
+                                  ...selectedField.style,
+                                  bold: event.target.checked
+                                }
+                              })
+                            }
+                          />
+                          <span>Bold text</span>
+                        </label>
+                      </>
                     ) : null}
+
+                    <div className="inline-grid">
+                      <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
+                        Duplicate field
+                      </button>
+                      <button type="button" className="button button--danger" onClick={() => removeField(selectedField.id)}>
+                        Delete field
+                      </button>
+                    </div>
+
+                    <details className="advanced-details">
+                      <summary>Advanced details</summary>
+                      <div className="stack compact">
+                        <label className="form-field">
+                          <span>Internal name</span>
+                          <input
+                            value={selectedField.name}
+                            onChange={(event) => updateField({ ...selectedField, name: event.target.value })}
+                          />
+                        </label>
+                        {selectedField.type !== "signature" ? (
+                          <label className="form-field">
+                            <span>Binding key</span>
+                            <input
+                              value={selectedField.bindingKey ?? ""}
+                              placeholder="company_name"
+                              onChange={(event) =>
+                                updateField({
+                                  ...selectedField,
+                                  bindingKey: event.target.value || undefined
+                                })
+                              }
+                            />
+                          </label>
+                        ) : null}
+                      </div>
+                    </details>
                   </div>
-                </section>
+                ) : (
+                  <p className="helper-copy">Select a field on the document to edit its settings.</p>
+                )}
+              </section>
+            </aside>
+          </>
+        ) : (
+          <section className="empty-state empty-state--editor">
+            <div className="empty-state__card">
+              <h2>Upload a PDF to start editing</h2>
+              <p>
+                Add text, dates, checkboxes and signatures directly on your document. The original file stays untouched.
+              </p>
+              <div className="empty-state__actions">
+                <button type="button" className="button" onClick={promptImport}>
+                  Upload PDF
+                </button>
+                <span>or drag and drop a PDF here</span>
               </div>
             </div>
-          )}
-        </section>
-
-        {selectedField ? (
-          <aside className="sidebar sidebar--inspector">
-            <section className="panel">
-              <div className="panel__header">
-                <h2>Inspector</h2>
-              </div>
-              <div className="stack">
-                <label className="form-field">
-                  <span>Internal name</span>
-                  <input
-                    value={selectedField.name}
-                    onChange={(event) => updateField({ ...selectedField, name: event.target.value })}
-                  />
-                </label>
-                {selectedField.type !== "signature" ? (
-                  <label className="form-field">
-                    <span>Binding key</span>
-                    <input
-                      value={selectedField.bindingKey ?? ""}
-                      placeholder="company_name"
-                      onChange={(event) =>
-                        updateField({
-                          ...selectedField,
-                          bindingKey: event.target.value || undefined
-                        })
-                      }
-                    />
-                  </label>
-                ) : null}
-                {selectedField.type === "signature" ? (
-                  <div className="context-banner">
-                    <strong>Visual signature</strong>
-                    <span>
-                      {selectedField.signatureProfileId
-                        ? "Use the signature library on the left to replace or remove this signature."
-                        : "Choose a saved signature on the left to fill this field."}
-                    </span>
-                    {selectedField.signatureProfileId ? (
-                      <button type="button" className="button button--chip" onClick={clearSelectedSignatureField}>
-                        Remove signature
-                      </button>
-                    ) : null}
-                  </div>
-                ) : null}
-                {selectedField.type !== "checkbox" && selectedField.type !== "signature" ? (
-                  <label className="form-field">
-                    <span>Default value</span>
-                    <input
-                      value={selectedField.value ?? ""}
-                      onChange={(event) => updateField({ ...selectedField, value: event.target.value })}
-                    />
-                  </label>
-                ) : null}
-                {selectedField.type !== "checkbox" && selectedField.type !== "signature" ? (
-                  <div className="inline-grid">
-                    <label className="form-field">
-                      <span>Font</span>
-                      <input
-                        type="number"
-                        min={10}
-                        max={32}
-                        value={selectedField.style.fontSize}
-                        onChange={(event) =>
-                          updateField({
-                            ...selectedField,
-                            style: {
-                              ...selectedField.style,
-                              fontSize: Number(event.target.value)
-                            }
-                          })
-                        }
-                      />
-                    </label>
-                    <label className="form-field">
-                      <span>Color</span>
-                      <input
-                        type="color"
-                        value={selectedField.style.color}
-                        onChange={(event) =>
-                          updateField({
-                            ...selectedField,
-                            style: {
-                              ...selectedField.style,
-                              color: event.target.value
-                            }
-                          })
-                        }
-                      />
-                    </label>
-                  </div>
-                ) : null}
-                <div className="inline-grid">
-                  <label className="form-field">
-                    <span>Width</span>
-                    <input
-                      type="number"
-                      min={0.04}
-                      max={1}
-                      step={0.01}
-                      value={selectedField.width}
-                      onChange={(event) =>
-                        updateField({
-                          ...selectedField,
-                          width: Number(event.target.value)
-                        })
-                      }
-                    />
-                  </label>
-                  <label className="form-field">
-                    <span>Height</span>
-                    <input
-                      type="number"
-                      min={0.03}
-                      max={1}
-                      step={0.01}
-                      value={selectedField.height}
-                      onChange={(event) =>
-                        updateField({
-                          ...selectedField,
-                          height: Number(event.target.value)
-                        })
-                      }
-                    />
-                  </label>
-                </div>
-                <label className="toggle-row">
-                  <input
-                    type="checkbox"
-                    checked={selectedField.style.bold}
-                    onChange={(event) =>
-                      updateField({
-                        ...selectedField,
-                        style: {
-                          ...selectedField.style,
-                          bold: event.target.checked
-                        }
-                      })
-                    }
-                  />
-                  <span>Bold</span>
-                </label>
-              </div>
-            </section>
-          </aside>
-        ) : null}
+          </section>
+        )}
       </main>
 
       {isDragActive ? (

@@ -98,6 +98,7 @@ export default function App({
   const [pendingFieldType, setPendingFieldType] = useState<FieldType | null>(null);
   const [pendingSignatureProfileId, setPendingSignatureProfileId] = useState<string | null>(null);
   const [showSignatureCreator, setShowSignatureCreator] = useState(false);
+  const [editingSignatureProfileId, setEditingSignatureProfileId] = useState<string | null>(null);
   const [isDragActive, setIsDragActive] = useState(false);
   const [signatureDraft, setSignatureDraft] = useState<SignatureDraft>({
     sourceType: "upload",
@@ -284,6 +285,9 @@ export default function App({
   const selectedSignatureField = selectedField?.type === "signature" ? selectedField : null;
   const selectedSignatureProfile = selectedSignatureField?.signatureProfileId
     ? store.signatureProfiles.find((profile) => profile.id === selectedSignatureField.signatureProfileId) ?? null
+    : null;
+  const editingSignatureProfile = editingSignatureProfileId
+    ? store.signatureProfiles.find((profile) => profile.id === editingSignatureProfileId) ?? null
     : null;
   const pendingSignatureProfile = pendingSignatureProfileId
     ? store.signatureProfiles.find((profile) => profile.id === pendingSignatureProfileId) ?? null
@@ -620,6 +624,29 @@ export default function App({
     return `Signature ${String(store.signatureProfiles.length + 1).padStart(2, "0")}`;
   }
 
+  function resetSignatureDraft() {
+    setSignatureDraft({
+      sourceType: "upload",
+      dataUrl: "",
+      fileName: "",
+      originalDataUrl: "",
+      transparentBackground: true
+    });
+  }
+
+  function closeSignatureCreator() {
+    setShowSignatureCreator(false);
+    setEditingSignatureProfileId(null);
+    resetSignatureDraft();
+  }
+
+  function openNewSignatureCreator() {
+    setEditingSignatureProfileId(null);
+    resetSignatureDraft();
+    setShowSignatureCreator(true);
+    setWorkspacePanel("signatures");
+  }
+
   async function updateSignatureTransparency(enabled: boolean) {
     const originalDataUrl = signatureDraft.originalDataUrl ?? "";
     if (!originalDataUrl) {
@@ -639,6 +666,40 @@ export default function App({
       transparentBackground: enabled,
       dataUrl: nextDataUrl
     }));
+  }
+
+  async function beginSignatureEditing(profileId: string) {
+    const profile = store.signatureProfiles.find((item) => item.id === profileId);
+    if (!profile) {
+      return;
+    }
+
+    const dataUrl = signatureAssetCache[profile.assetRef] ?? (await resolveSignatureAsset(store, profile.assetRef));
+    if (!dataUrl) {
+      flash({
+        tone: "error",
+        message: "I couldn't load that saved signature."
+      });
+      return;
+    }
+
+    if (!signatureAssetCache[profile.assetRef]) {
+      setSignatureAssetCache((current) => ({
+        ...current,
+        [profile.assetRef]: dataUrl
+      }));
+    }
+
+    setEditingSignatureProfileId(profile.id);
+    setSignatureDraft({
+      sourceType: profile.sourceType,
+      dataUrl,
+      fileName: `${profile.displayName}.png`,
+      originalDataUrl: profile.sourceType === "upload" ? dataUrl : "",
+      transparentBackground: true
+    });
+    setShowSignatureCreator(true);
+    setWorkspacePanel("signatures");
   }
 
   function activateSignatureProfile(profileId: string) {
@@ -689,6 +750,47 @@ export default function App({
       return;
     }
 
+    if (editingSignatureProfile) {
+      const persisted = await persistSignatureAsset(store, signatureDraft);
+      const nextSignatureAssets = {
+        ...(persisted.nextStore.signatureAssets ?? {})
+      };
+
+      if (editingSignatureProfile.assetRef !== persisted.assetRef) {
+        delete nextSignatureAssets[editingSignatureProfile.assetRef];
+      }
+
+      const updatedProfile: SignatureProfile = {
+        ...editingSignatureProfile,
+        sourceType: signatureDraft.sourceType,
+        assetRef: persisted.assetRef
+      };
+
+      setStore({
+        ...persisted.nextStore,
+        signatureProfiles: persisted.nextStore.signatureProfiles.map((profile) =>
+          profile.id === editingSignatureProfile.id ? updatedProfile : profile
+        ),
+        signatureAssets: nextSignatureAssets
+      });
+      setSignatureAssetCache((current) => {
+        const nextCache = {
+          ...current,
+          [persisted.assetRef]: signatureDraft.dataUrl
+        };
+        if (editingSignatureProfile.assetRef !== persisted.assetRef) {
+          delete nextCache[editingSignatureProfile.assetRef];
+        }
+        return nextCache;
+      });
+      closeSignatureCreator();
+      flash({
+        tone: "success",
+        message: `Signature "${updatedProfile.displayName}" updated.`
+      });
+      return;
+    }
+
     const persisted = await persistSignatureAsset(store, signatureDraft);
     const profile: SignatureProfile = {
       id: createId("signature_profile"),
@@ -706,14 +808,9 @@ export default function App({
       ...current,
       [persisted.assetRef]: signatureDraft.dataUrl
     }));
-    setSignatureDraft({
-      sourceType: "upload",
-      dataUrl: "",
-      fileName: "",
-      originalDataUrl: "",
-      transparentBackground: true
-    });
+    resetSignatureDraft();
     setShowSignatureCreator(false);
+    setEditingSignatureProfileId(null);
     setWorkspacePanel("signatures");
 
     if (selectedField && selectedField.type === "signature") {
@@ -742,6 +839,59 @@ export default function App({
     flash({
       tone: "success",
       message: `Signature "${profile.displayName}" saved.`
+    });
+  }
+
+  function deleteSignatureProfile(profileId: string) {
+    const profile = store.signatureProfiles.find((item) => item.id === profileId);
+    if (!profile) {
+      return;
+    }
+
+    setStore((current) => {
+      const nextSignatureAssets = {
+        ...(current.signatureAssets ?? {})
+      };
+      delete nextSignatureAssets[profile.assetRef];
+
+      return {
+        ...current,
+        signatureProfiles: current.signatureProfiles.filter((item) => item.id !== profileId),
+        signatureAssets: nextSignatureAssets
+      };
+    });
+    setSignatureAssetCache((current) => {
+      const nextCache = {
+        ...current
+      };
+      delete nextCache[profile.assetRef];
+      return nextCache;
+    });
+    setWorkingDocument((current) =>
+      current
+        ? {
+            ...current,
+            fields: current.fields.map((field) =>
+              field.type === "signature" && field.signatureProfileId === profileId
+                ? {
+                    ...field,
+                    signatureProfileId: undefined
+                  }
+                : field
+            )
+          }
+        : current
+    );
+    if (pendingSignatureProfileId === profileId) {
+      setPendingSignatureProfileId(null);
+      setPendingFieldType(null);
+    }
+    if (editingSignatureProfileId === profileId) {
+      closeSignatureCreator();
+    }
+    flash({
+      tone: "success",
+      message: `Signature "${profile.displayName}" deleted.`
     });
   }
 
@@ -934,7 +1084,13 @@ export default function App({
                   <button
                     type="button"
                     className="button button--chip"
-                    onClick={() => setShowSignatureCreator((current) => !current)}
+                    onClick={() => {
+                      if (showSignatureCreator) {
+                        closeSignatureCreator();
+                        return;
+                      }
+                      openNewSignatureCreator();
+                    }}
                   >
                     {showSignatureCreator ? "Close" : "New signature"}
                   </button>
@@ -947,7 +1103,7 @@ export default function App({
                 {showSignatureCreator ? (
                   <div className="stack signature-creator">
                     <div className="signature-creator__header">
-                      <h3>Add signature</h3>
+                      <h3>{editingSignatureProfile ? `Edit ${editingSignatureProfile.displayName}` : "Add signature"}</h3>
                     </div>
                     <div className="segmented">
                       <button
@@ -1040,37 +1196,59 @@ export default function App({
                     )}
                     <div className="panel__row-actions">
                       <button type="button" className="button" onClick={saveSignatureProfile}>
-                        Save signature
+                        {editingSignatureProfile ? "Update signature" : "Save signature"}
                       </button>
                     </div>
                   </div>
                 ) : null}
                 <div className={`signature-library ${showSignatureCreator ? "signature-library--compact" : ""}`}>
                   {store.signatureProfiles.map((profile) => (
-                    <button
+                    <div
                       key={profile.id}
-                      type="button"
                       className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
-                      onClick={() => activateSignatureProfile(profile.id)}
                     >
-                      <div className="signature-card__preview">
-                        {signatureAssetCache[profile.assetRef] ? (
-                          <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} />
-                        ) : null}
+                      <button
+                        type="button"
+                        className="signature-card__main"
+                        onClick={() => activateSignatureProfile(profile.id)}
+                      >
+                        <div className="signature-card__preview">
+                          {signatureAssetCache[profile.assetRef] ? (
+                            <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} />
+                          ) : null}
+                        </div>
+                        <div className="signature-card__meta">
+                          <strong>{profile.displayName}</strong>
+                          <span>
+                            {selectedSignatureField?.signatureProfileId === profile.id
+                              ? "Applied to selected field"
+                              : pendingSignatureProfileId === profile.id
+                                ? "Click on the page to place"
+                                : sessionOnlySignatures
+                                  ? "Saved for this session"
+                                  : "Ready to use"}
+                          </span>
+                        </div>
+                      </button>
+                      <div className="signature-card__actions">
+                        <button
+                          type="button"
+                          className="button button--chip"
+                          onClick={() => {
+                            void beginSignatureEditing(profile.id);
+                          }}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          className="button button--chip danger"
+                          onClick={() => deleteSignatureProfile(profile.id)}
+                        >
+                          Delete
+                        </button>
                       </div>
-                      <div className="signature-card__meta">
-                        <strong>{profile.displayName}</strong>
-                        <span>
-                          {selectedSignatureField?.signatureProfileId === profile.id
-                            ? "Applied to selected field"
-                            : pendingSignatureProfileId === profile.id
-                              ? "Click on the page to place"
-                              : sessionOnlySignatures
-                                ? "Saved for this session"
-                                : "Ready to use"}
-                        </span>
-                      </div>
-                    </button>
+                    </div>
                   ))}
                   {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
                 </div>

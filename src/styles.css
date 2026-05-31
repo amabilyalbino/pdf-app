@@ -1556,12 +1556,10 @@ textarea:focus {
 }
 
 .signature-card {
-  display: grid;
-  grid-template-columns: 78px minmax(0, 1fr);
-  align-items: center;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   width: 100%;
-  cursor: pointer;
   padding: 8px 10px;
   border-color: rgba(29, 29, 31, 0.06);
   background: rgba(255, 255, 255, 0.76);
@@ -1578,6 +1576,26 @@ textarea:focus {
   border-color: rgba(79, 109, 255, 0.2);
   background: rgba(79, 109, 255, 0.08);
   box-shadow: inset 0 0 0 1px rgba(79, 109, 255, 0.08);
+}
+
+.signature-card__main {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.signature-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
 }
 
 .signature-card__preview {

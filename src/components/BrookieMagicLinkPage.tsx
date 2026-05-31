@@ -373,7 +373,7 @@ export function BrookieMagicLinkPage({
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[520px] items-center justify-center px-4 py-8 sm:px-6">
-        <div className="relative w-full pt-34 sm:pt-38">
+        <div className="relative w-full">
           <div className="mb-8 text-center sm:mb-10">
             <h1 className="mx-auto max-w-[12ch] text-5xl font-semibold leading-[0.94] tracking-[-0.07em] sm:text-6xl">
               {isSuccess ? `Check your inbox, ${recipientName}!` : `Welcome, ${recipientName}!`}
@@ -383,18 +383,18 @@ export function BrookieMagicLinkPage({
             </p>
           </div>
 
-          <div className="absolute inset-x-0 top-0 z-20 flex justify-center">
-            <div className="relative translate-y-6 sm:translate-y-8">
+          <div className="relative z-20 mb-[-2.6rem] flex justify-center sm:mb-[-3rem]">
+            <div className="relative">
               <div className="absolute inset-x-0 bottom-5 mx-auto h-16 w-28 rounded-full bg-[#B8E3C8]/22 blur-2xl" />
               <BrookieMascot mood={mascotMood} />
             </div>
           </div>
 
-          <section className="relative overflow-hidden rounded-[2rem] bg-white px-6 pb-7 pt-34 shadow-[0_28px_80px_rgba(37,51,45,0.10)] ring-1 ring-[#25332D]/5 sm:px-7 sm:pb-8 sm:pt-38">
-            <div className="absolute inset-x-0 top-0 h-18 bg-linear-to-b from-[#B8E3C8]/10 to-transparent" />
-            <div className="absolute left-5 top-24 h-3 w-3 rounded-full bg-[#F8D65C]/75" />
-            <div className="absolute right-5 top-26 h-2.5 w-2.5 rounded-full bg-[#CDEBFA]" />
-            {showValid ? <CloudSparkle className="absolute right-6 top-32 h-5 w-5 animate-brookie-sparkle text-[#F8D65C]" /> : null}
+          <section className="relative overflow-hidden rounded-[2rem] bg-white px-6 pb-7 pt-24 shadow-[0_28px_80px_rgba(37,51,45,0.10)] ring-1 ring-[#25332D]/5 sm:px-7 sm:pb-8 sm:pt-28">
+            <div className="absolute inset-x-0 top-0 h-20 bg-linear-to-b from-[#B8E3C8]/10 to-transparent" />
+            <div className="absolute left-5 top-16 h-3 w-3 rounded-full bg-[#F8D65C]/75" />
+            <div className="absolute right-5 top-20 h-2.5 w-2.5 rounded-full bg-[#CDEBFA]" />
+            {showValid ? <CloudSparkle className="absolute right-6 top-24 h-5 w-5 animate-brookie-sparkle text-[#F8D65C]" /> : null}
 
             {!isSuccess ? (
               <form className="space-y-5" onSubmit={handleSubmit} noValidate>

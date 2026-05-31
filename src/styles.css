@@ -271,6 +271,7 @@ button {
   gap: 16px;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 .workspace--loaded {
@@ -291,8 +292,12 @@ button {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  overflow: auto;
-  padding-right: 2px;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 6px;
+  padding-bottom: 18px;
+  overscroll-behavior: contain;
 }
 
 .panel {
@@ -506,6 +511,10 @@ button {
 
 .guide-step.is-blocked::before {
   background: var(--danger);
+}
+
+.guide-step.is-blocked {
+  background: rgba(179, 75, 66, 0.04);
 }
 
 .auth-shell {
@@ -773,6 +782,14 @@ button {
   letter-spacing: -0.03em;
 }
 
+.canvas-helper {
+  margin: 0;
+  max-width: 420px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
 .canvas-header__meta {
   display: flex;
   flex-wrap: wrap;
@@ -791,6 +808,39 @@ button {
   border-radius: 999px;
   background: #f2f4f6;
   border: 1px solid #e4e8ec;
+}
+
+.export-readiness {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 20px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.export-readiness strong {
+  font-size: 0.82rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.export-readiness span {
+  line-height: 1.45;
+}
+
+.export-readiness--neutral strong {
+  color: var(--muted-soft);
+}
+
+.export-readiness--warning strong {
+  color: var(--danger);
+}
+
+.export-readiness--success strong {
+  color: #2f7a4d;
 }
 
 .segmented {
@@ -821,6 +871,9 @@ button {
   overflow: auto;
   padding: 22px;
   background: linear-gradient(180deg, #f5f6f8 0%, #eef1f4 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .page-stack {
@@ -829,6 +882,31 @@ button {
   align-items: center;
   gap: 24px;
   width: 100%;
+}
+
+.canvas-empty-hint {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 520px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(16, 16, 16, 0.07);
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+  text-align: center;
+}
+
+.canvas-empty-hint strong {
+  font-size: 0.94rem;
+  letter-spacing: -0.02em;
+}
+
+.canvas-empty-hint span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .page-card {
@@ -1288,6 +1366,8 @@ select {
   .sidebar {
     overflow: visible;
     padding-right: 0;
+    padding-bottom: 0;
+    height: auto;
   }
 
   .editor-surface {
@@ -1355,6 +1435,10 @@ select {
 
   .canvas-header__meta {
     justify-content: flex-start;
+  }
+
+  .export-readiness {
+    padding-top: 4px;
   }
 
   .inline-grid,

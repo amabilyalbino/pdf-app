@@ -252,6 +252,9 @@ export default function App({
     [signatureFields]
   );
 
+  const hasAnyFields = (workingDocument?.fields.length ?? 0) > 0;
+  const missingSignatureCount = Math.max(signatureFields.length - assignedSignatureFields.length, 0);
+
   const exportBlockers = useMemo(() => {
     const blockers: string[] = [];
 
@@ -260,15 +263,22 @@ export default function App({
       return blockers;
     }
 
-    if (signatureFields.length > assignedSignatureFields.length) {
-      blockers.push("Assign a signature to every signature field before exporting.");
+    if (!hasAnyFields) {
+      blockers.push("No fields added yet. Add at least one field before exporting.");
+    }
+
+    if (missingSignatureCount === 1) {
+      blockers.push("Export blocked: 1 signature field still needs a saved signature.");
+    }
+
+    if (missingSignatureCount > 1) {
+      blockers.push(`Export blocked: ${missingSignatureCount} signature fields still need saved signatures.`);
     }
 
     return blockers;
-  }, [assignedSignatureFields.length, signatureFields.length, workingDocument]);
+  }, [hasAnyFields, missingSignatureCount, workingDocument]);
 
-  const canExport = workingDocument !== null && exportBlockers.length === 0;
-  const hasAnyFields = (workingDocument?.fields.length ?? 0) > 0;
+  const canExport = workingDocument !== null && hasAnyFields && exportBlockers.length === 0;
   const hasWorkingDocument = Boolean(workingDocument && pdfDocumentProxy);
   const selectedSignatureField = selectedField?.type === "signature" ? selectedField : null;
   const selectedSignatureProfile = selectedSignatureField?.signatureProfileId
@@ -286,9 +296,30 @@ export default function App({
         ? `Placing ${FIELD_TYPE_LABELS[pendingFieldType]}`
         : null;
   const activePageMapping = workingDocument?.importedPdf.pageMappings[workingDocument.activePage] ?? null;
-  const workflowStage = !workingDocument || workingDocument.fields.length === 0 ? 1 : canExport ? 3 : 2;
   const loadedWorkingDocument = hasWorkingDocument ? workingDocument : null;
   const loadedPdfDocument = hasWorkingDocument ? pdfDocumentProxy : null;
+  const exportReadinessMessage = !workingDocument
+    ? "Import a PDF to continue."
+    : !hasAnyFields
+      ? "No fields added yet. Add at least one field before exporting."
+      : missingSignatureCount === 1
+        ? "Export blocked: 1 signature field still needs a saved signature."
+        : missingSignatureCount > 1
+          ? `Export blocked: ${missingSignatureCount} signature fields still need saved signatures.`
+          : "Ready to export. All fields are complete.";
+  const exportReadinessTone = !workingDocument || !hasAnyFields ? "neutral" : canExport ? "success" : "warning";
+  const canvasHelperMessage =
+    selectedField
+      ? "Edit the selected field using the settings panel."
+      : pendingFieldType === "text"
+        ? "Click on the PDF to place a text field."
+        : pendingFieldType === "date"
+          ? "Click on the PDF to place a date field."
+          : pendingFieldType === "checkbox"
+            ? "Click on the PDF to place a checkbox."
+            : pendingFieldType === "signature"
+              ? "Click on the PDF to place a signature field."
+              : "Choose a tool on the left to start adding fields.";
 
   function flash(nextNotice: Notice) {
     setNotice(nextNotice);
@@ -899,17 +930,17 @@ export default function App({
                   <h2>Workflow</h2>
                 </div>
                 <div className="stack compact">
-                  <div className={`guide-step ${workflowStage === 1 ? "is-active" : workflowStage > 1 ? "is-complete" : ""}`}>
+                  <div className={`guide-step ${!hasAnyFields ? "is-active" : "is-complete"}`}>
                     <strong>1. Add fields</strong>
-                    <span>Choose a tool and click on the document to place it.</span>
+                    <span>Choose a tool and place fields on the PDF.</span>
                   </div>
-                  <div className={`guide-step ${workflowStage === 2 ? "is-active" : workflowStage > 2 ? "is-complete" : ""}`}>
+                  <div className={`guide-step ${hasAnyFields && !canExport ? "is-active" : canExport ? "is-complete" : ""}`}>
                     <strong>2. Review</strong>
-                    <span>Check values, signatures, and field placement before exporting.</span>
+                    <span>Check values, signatures and placement.</span>
                   </div>
-                  <div className={`guide-step ${workflowStage === 3 ? "is-active" : ""}`}>
+                  <div className={`guide-step ${canExport ? "is-active" : hasAnyFields ? "is-blocked" : ""}`}>
                     <strong>3. Export</strong>
-                    <span>{canExport ? "Ready to export." : exportBlockers[0] ?? "Finish the required fields first."}</span>
+                    <span>{canExport ? "Ready to export." : "Complete required fields before exporting."}</span>
                   </div>
                 </div>
               </section>
@@ -1111,6 +1142,7 @@ export default function App({
                     Page {loadedWorkingDocument.activePage + 1}
                     {activePageMapping ? ` of ${loadedWorkingDocument.importedPdf.pageMappings.length}` : ""}
                   </h2>
+                  <p className="canvas-helper">{canvasHelperMessage}</p>
                 </div>
                 <div className="canvas-header__meta">
                   <span>{activePageFields.length} field(s) on this page</span>
@@ -1123,8 +1155,18 @@ export default function App({
                   ) : null}
                 </div>
               </div>
+              <div className={`export-readiness export-readiness--${exportReadinessTone}`}>
+                <strong>{canExport ? "Export ready" : exportReadinessTone === "warning" ? "Export blocked" : "Next step"}</strong>
+                <span>{exportReadinessMessage}</span>
+              </div>
 
               <div className="page-stage" ref={pageStageRef}>
+                {!hasAnyFields ? (
+                  <div className="canvas-empty-hint">
+                    <strong>Your document is ready.</strong>
+                    <span>Choose a tool on the left, then click on the PDF to place your first field.</span>
+                  </div>
+                ) : null}
                 <div className="page-stack">
                   {loadedWorkingDocument.importedPdf.pageMappings.map((mapping) => {
                     const pageFields = loadedWorkingDocument.fields.filter((field) => field.page === mapping.page);

@@ -187,15 +187,21 @@ function MascotFace({ mood }: { mood: MascotMood }) {
       <>
         <path d="M72 72c4-7 11-10 20-10" stroke="#25332D" strokeWidth="3.5" strokeLinecap="round" />
         <path d="M109 62c9 0 16 3 20 10" stroke="#25332D" strokeWidth="3.5" strokeLinecap="round" />
-        <path d="M76 86c4 6 10 9 16 9" stroke="#25332D" strokeWidth="4" strokeLinecap="round" />
-        <path d="M113 95c6 0 12-3 16-9" stroke="#25332D" strokeWidth="4" strokeLinecap="round" />
         <path
-          d="M88 110c6 8 20 8 28 0"
+          d="M89 109c7 10 20 10 28 0"
           stroke="#25332D"
           strokeWidth="4.5"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
+        <g className="origin-center animate-brookie-blink">
+          <circle cx="84" cy="86" r="6.2" fill="#25332D" />
+          <circle cx="120" cy="86" r="6.2" fill="#25332D" />
+          <circle cx="86.5" cy="83.5" r="1.8" fill="#FFFCF7" />
+          <circle cx="122.5" cy="83.5" r="1.8" fill="#FFFCF7" />
+        </g>
+        <circle cx="69" cy="100" r="5" fill="#F29AC2" fillOpacity="0.26" />
+        <circle cx="135" cy="100" r="5" fill="#F29AC2" fillOpacity="0.26" />
       </>
     );
   }
@@ -554,7 +560,7 @@ export function BrookieMagicLinkPage({
                         setIsFocused(false);
                         setHasBlurred(true);
                       }}
-                      placeholder="brookie@studio.com"
+                      placeholder="Enter your email"
                       className="w-full border-none bg-transparent text-base text-[#25332D] outline-none placeholder:text-[#A7AEA9] sm:text-[1.05rem]"
                       aria-invalid={showInvalid || !!submitError || !!externalError}
                       aria-describedby={`${inputId}-helper`}

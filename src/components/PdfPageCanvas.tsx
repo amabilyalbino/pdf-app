@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 
 type PdfPageCanvasProps = {
@@ -10,8 +10,47 @@ type PdfPageCanvasProps = {
 
 export function PdfPageCanvas({ documentProxy, pageIndex, width, height }: PdfPageCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [shouldRender, setShouldRender] = useState(pageIndex === 0);
 
   useEffect(() => {
+    setShouldRender(pageIndex === 0);
+  }, [documentProxy, pageIndex]);
+
+  useEffect(() => {
+    if (shouldRender) {
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        setShouldRender(true);
+        observer.disconnect();
+      },
+      {
+        rootMargin: "600px 0px"
+      }
+    );
+
+    observer.observe(canvas);
+
+    return () => observer.disconnect();
+  }, [shouldRender]);
+
+  useEffect(() => {
+    if (!shouldRender) {
+      return;
+    }
+
     let cancelled = false;
 
     async function renderPage() {
@@ -41,7 +80,7 @@ export function PdfPageCanvas({ documentProxy, pageIndex, width, height }: PdfPa
     return () => {
       cancelled = true;
     };
-  }, [documentProxy, pageIndex]);
+  }, [documentProxy, pageIndex, shouldRender]);
 
   return (
     <canvas

@@ -8,7 +8,7 @@ import {
   fieldToTemplateDefinition,
   instantiateTemplate
 } from "./lib/field";
-import { exportPdfDocument, importPdfFromFile } from "./lib/pdf";
+import { exportPdfDocument, importPdfFromFile, preloadPdfRuntime } from "./lib/pdf";
 import { createId } from "./lib/id";
 import {
   EMPTY_STORE,
@@ -114,6 +114,8 @@ export default function App({
 
   useEffect(() => {
     let active = true;
+
+    preloadPdfRuntime();
 
     async function bootstrap() {
       const nextStore = await loadStore();

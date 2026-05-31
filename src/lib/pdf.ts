@@ -25,6 +25,10 @@ async function getPdfJs() {
   return pdfJsPromise;
 }
 
+export function preloadPdfRuntime() {
+  void getPdfJs();
+}
+
 async function getPdfLib() {
   if (!pdfLibPromise) {
     pdfLibPromise = import("pdf-lib");
@@ -79,19 +83,37 @@ function stableHash(input: string): string {
 }
 
 async function extractFingerprint(document: PdfJsNamespace.PDFDocumentProxy): Promise<TemplateFingerprint> {
-  const pageSizes: Array<{ width: number; height: number }> = [];
+  const firstPage = await document.getPage(1);
+  const firstViewport = firstPage.getViewport({ scale: 1 });
+  const pageSizes: Array<{ width: number; height: number }> = new Array(document.numPages);
+  pageSizes[0] = {
+    width: firstViewport.width,
+    height: firstViewport.height
+  };
 
-  for (let pageIndex = 1; pageIndex <= document.numPages; pageIndex += 1) {
-    const page = await document.getPage(pageIndex);
-    const viewport = page.getViewport({ scale: 1 });
-    pageSizes.push({
-      width: viewport.width,
-      height: viewport.height
-    });
+  const firstPageTextPromise = firstPage.getTextContent();
+
+  const remainingPageNumbers = Array.from({ length: Math.max(document.numPages - 1, 0) }, (_, index) => index + 2);
+  const workerCount = Math.min(6, remainingPageNumbers.length);
+  let nextPageIndex = 0;
+
+  async function collectPageSizes() {
+    while (nextPageIndex < remainingPageNumbers.length) {
+      const currentIndex = nextPageIndex;
+      nextPageIndex += 1;
+      const pageNumber = remainingPageNumbers[currentIndex];
+      const page = await document.getPage(pageNumber);
+      const viewport = page.getViewport({ scale: 1 });
+      pageSizes[pageNumber - 1] = {
+        width: viewport.width,
+        height: viewport.height
+      };
+    }
   }
 
-  const firstPage = await document.getPage(1);
-  const content = await firstPage.getTextContent();
+  await Promise.all(Array.from({ length: workerCount }, () => collectPageSizes()));
+
+  const content = await firstPageTextPromise;
   const text = content.items
     .map((item) => ("str" in item ? item.str : ""))
     .join(" ")

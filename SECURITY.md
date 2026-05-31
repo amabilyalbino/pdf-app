@@ -32,6 +32,10 @@ Frontend-safe variables:
 - `VITE_ALLOWED_EMAILS`
 - `VITE_WEB_SIGNATURE_PERSISTENCE=false`
 
+Example allowlist:
+
+- `VITE_ALLOWED_EMAILS=first-approved@yourcompany.com,second-approved@yourcompany.com`
+
 Never put a Supabase `service_role` key in Vercel or in client-side code.
 
 ## Required external settings

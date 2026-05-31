@@ -326,13 +326,11 @@ export default function App({
     ? "Import a PDF to continue."
     : !hasAnyFields
       ? "No fields added yet."
-      : missingSignatureCount > 0 && missingValueCount > 0
-        ? "Complete the missing fields before exporting."
-        : missingSignatureCount > 0
-          ? "Add a signature before exporting."
-          : missingValueCount > 0
-            ? `Add content to ${missingValueCount} field${missingValueCount === 1 ? "" : "s"} before exporting.`
-            : "Ready to export.";
+      : missingSignatureCount > 0
+        ? "Add a signature before exporting."
+        : missingValueCount > 0
+          ? "Complete missing fields before exporting."
+          : "Ready to export.";
   const exportReadinessTone = !workingDocument || !hasAnyFields ? "neutral" : canExport ? "success" : "warning";
   const canvasHelperMessage =
     selectedField
@@ -947,9 +945,14 @@ export default function App({
                   <h2>Document</h2>
                 </div>
                 <div className="stack compact">
-                  <div className="meta-card meta-card--minimal">
-                    <strong>{loadedWorkingDocument.importedPdf.name}</strong>
-                    <span>{loadedWorkingDocument.importedPdf.pageMappings.length} pages</span>
+                  <div className="meta-card meta-card--minimal meta-card--document">
+                    <span className="meta-card__icon" aria-hidden="true">
+                      📄
+                    </span>
+                    <div className="meta-card__content">
+                      <strong>{loadedWorkingDocument.importedPdf.name}</strong>
+                      <span>{loadedWorkingDocument.importedPdf.pageMappings.length} pages</span>
+                    </div>
                   </div>
                 </div>
               </section>
@@ -1057,7 +1060,11 @@ export default function App({
                       className={`signature-card ${highlightedSignatureProfileId === profile.id ? "is-selected" : ""}`}
                       onClick={() => activateSignatureProfile(profile.id)}
                     >
-                      {signatureAssetCache[profile.assetRef] ? <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} /> : null}
+                      <div className="signature-card__preview">
+                        {signatureAssetCache[profile.assetRef] ? (
+                          <img src={signatureAssetCache[profile.assetRef]} alt={profile.displayName} />
+                        ) : null}
+                      </div>
                       <div className="signature-card__meta">
                         <strong>{profile.displayName}</strong>
                         <span>
@@ -1083,7 +1090,7 @@ export default function App({
               >
                 <summary className="panel__summary">
                   <span>Reusable data</span>
-                  <span className="panel__summary-indicator" aria-hidden="true">{isProfilesOpen ? "−" : "+"}</span>
+                  <span className="panel__summary-indicator">{isProfilesOpen ? "Hide" : "Show"}</span>
                 </summary>
                 <div className="panel__collapsible-body">
                   {store.fillProfiles.length > 0 ? (
@@ -1135,7 +1142,7 @@ export default function App({
               >
                 <summary className="panel__summary">
                   <span>Templates</span>
-                  <span className="panel__summary-indicator" aria-hidden="true">{isTemplatesOpen ? "−" : "+"}</span>
+                  <span className="panel__summary-indicator">{isTemplatesOpen ? "Hide" : "Show"}</span>
                 </summary>
                 <div className="panel__collapsible-body">
                   {suggestions.length > 0 ? (

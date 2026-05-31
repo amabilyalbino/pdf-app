@@ -176,7 +176,7 @@ function BrookieMascot({ mood }: { mood: MascotMood }) {
         : "animate-brookie-float";
 
   return (
-    <div className="relative mx-auto h-60 w-60 sm:h-[17rem] sm:w-[17rem]">
+    <div className="relative mx-auto h-60 w-60 sm:h-[17rem] sm:w-[17rem] md:h-[18.5rem] md:w-[18.5rem]">
       <div className="absolute -left-6 top-8 h-12 w-12 rounded-full bg-[#CDEBFA]/80 blur-[1px] animate-brookie-drift" />
       <div className="absolute -right-2 top-14 h-7 w-7 rounded-full bg-[#F29AC2]/60 animate-brookie-sparkle" />
       <div className="absolute bottom-6 left-2 h-6 w-6 rounded-full bg-[#F8D65C]/70 animate-brookie-sparkle" />
@@ -408,40 +408,41 @@ export function BrookieMagicLinkPage({
         <div className="absolute right-[18%] top-[42%] h-2 w-2 rounded-full bg-[#F8D65C]/80" />
       </div>
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-[480px] items-center justify-center px-4 py-6 sm:px-6">
-        <div className="relative w-full sm:-translate-y-6">
-          <div className="mb-6 text-center sm:mb-7">
-            <h1 className="mx-auto max-w-[11ch] text-[3.35rem] font-semibold leading-[0.95] tracking-[-0.07em] sm:text-[4.15rem]">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[560px] items-center justify-center px-4 py-6 sm:px-6">
+        <div className="relative w-full sm:-translate-y-6 md:-translate-y-10">
+          <div className="mb-5 text-center sm:mb-6">
+            <h1 className="mx-auto max-w-[9ch] text-[3.2rem] font-semibold leading-[0.96] tracking-[-0.072em] sm:text-[3.6rem] md:text-[4rem]">
               {isSuccess ? `Check your inbox, ${recipientName}!` : `Welcome, ${recipientName}!`}
             </h1>
-            <p className="mx-auto mt-3 max-w-[23ch] text-[1.05rem] leading-7 text-[#6D7670] sm:text-[1.14rem]">
+            <p className="mx-auto mt-2.5 max-w-[26ch] text-[1rem] leading-7 text-[#6D7670] sm:text-[1.06rem] md:text-[1.08rem]">
               {isSuccess ? "Your magic link is on its way." : "Hope your day feels as bright and colourful as you are."}
             </p>
           </div>
 
-          <div className="relative z-20 mb-[-4.1rem] flex justify-center sm:mb-[-4.6rem]">
+          <div className="relative z-20 mb-[-4.4rem] flex justify-center sm:mb-[-4.9rem] md:mb-[-5.3rem]">
             <div className="relative">
-              <div className="absolute inset-x-0 bottom-4 mx-auto h-[4.5rem] w-[8.5rem] rounded-full bg-[#B8E3C8]/22 blur-2xl" />
+              <div className="absolute inset-x-0 bottom-4 mx-auto h-[4.5rem] w-[8.5rem] rounded-full bg-[#B8E3C8]/22 blur-2xl md:h-[5rem] md:w-[9.25rem]" />
               <BrookieMascot mood={mascotMood} />
             </div>
           </div>
 
-          <section className="relative overflow-hidden rounded-[2.2rem] border border-[#25332D]/6 bg-white px-7 pb-8 pt-28 shadow-[0_24px_60px_rgba(37,51,45,0.085)] sm:px-8 sm:pb-9 sm:pt-[7.5rem]">
+          <section className="relative mx-auto w-full max-w-[468px] overflow-hidden rounded-[2.35rem] border border-[#25332D]/6 bg-white px-7 pb-8 pt-28 shadow-[0_22px_54px_rgba(37,51,45,0.082)] sm:px-8 sm:pb-9 sm:pt-[7.5rem] md:px-9 md:pb-10 md:pt-[7.85rem]">
             <div className="absolute inset-x-0 top-0 h-[5.5rem] bg-linear-to-b from-[#B8E3C8]/12 to-transparent" />
             <div className="absolute left-5 top-[4.5rem] h-3 w-3 rounded-full bg-[#F8D65C]/75" />
             <div className="absolute right-5 top-[4.5rem] h-2.5 w-2.5 rounded-full bg-[#CDEBFA]" />
             <div className="absolute right-9 top-12 h-2 w-2 rounded-full bg-[#F29AC2]/70" />
+            <div className="absolute left-7 top-[6.3rem] h-1.5 w-1.5 rounded-full bg-[#B8E3C8]/90" />
             {showValid ? <CloudSparkle className="absolute right-7 top-24 h-5 w-5 animate-brookie-sparkle text-[#F8D65C]" /> : null}
 
             {!isSuccess ? (
-              <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+              <form className="space-y-5 md:space-y-6" onSubmit={handleSubmit} noValidate>
                 <div className="space-y-2">
                   <label htmlFor={inputId} className="text-sm font-semibold text-[#25332D]">
                     Email
                   </label>
                   <div
                     className={cx(
-                      "group flex items-center gap-3 rounded-[1.35rem] border bg-white px-4 py-4 shadow-[0_10px_28px_rgba(37,51,45,0.04)] transition duration-300",
+                      "group flex items-center gap-3 rounded-[1.4rem] border bg-white px-4 py-[1.15rem] shadow-[0_10px_28px_rgba(37,51,45,0.04)] transition duration-300 md:px-[1.15rem]",
                       isFocused
                         ? "border-[#A8DDBA] shadow-[0_0_0_6px_rgba(184,227,200,0.35)]"
                         : showInvalid || submitError || externalError
@@ -467,7 +468,7 @@ export function BrookieMagicLinkPage({
                         setHasBlurred(true);
                       }}
                       placeholder="brookie@studio.com"
-                      className="w-full border-none bg-transparent text-lg text-[#25332D] outline-none placeholder:text-[#A7AEA9]"
+                      className="w-full border-none bg-transparent text-[1.04rem] text-[#25332D] outline-none placeholder:text-[#A7AEA9] md:text-[1.08rem]"
                       aria-invalid={showInvalid || !!submitError || !!externalError}
                       aria-describedby={`${inputId}-helper`}
                     />
@@ -493,7 +494,7 @@ export function BrookieMagicLinkPage({
                   type="submit"
                   disabled={isSubmitting}
                   className={cx(
-                    "inline-flex w-full items-center justify-center rounded-[1.35rem] px-5 py-[1.125rem] text-base font-semibold text-[#25332D] transition duration-300",
+                    "inline-flex w-full items-center justify-center rounded-[1.4rem] px-5 py-[1.125rem] text-base font-semibold text-[#25332D] transition duration-300 md:py-[1.18rem]",
                     isSubmitting
                       ? "cursor-wait bg-[#B8E3C8]/80 shadow-[0_14px_24px_rgba(168,221,186,0.35)]"
                       : "bg-[#A8DDBA] shadow-[0_14px_28px_rgba(168,221,186,0.38)] hover:-translate-y-0.5 hover:bg-[#B5E4C4] hover:shadow-[0_18px_32px_rgba(168,221,186,0.42)]"
@@ -515,8 +516,9 @@ export function BrookieMagicLinkPage({
                   </span>
                 </button>
 
-                <div className="pt-1 text-center">
-                  <div className="mb-2 flex justify-center">
+                <div className="pt-2 text-center">
+                  <div className="mb-2 flex items-center justify-center gap-2">
+                    <CloudSparkle className="h-3.5 w-3.5 text-[#F8D65C]/90" />
                     <LittleHeart className="h-4 w-4 text-[#F29AC2]/80" />
                   </div>
                   <p className="text-xs text-[#93A099] sm:text-[0.82rem]">Made with a little bit of colour.</p>
@@ -535,8 +537,9 @@ export function BrookieMagicLinkPage({
                   {isSubmitting ? "Sending a little link…" : "Send again"}
                 </button>
 
-                <div className="pt-1 text-center">
-                  <div className="mb-2 flex justify-center">
+                <div className="pt-2 text-center">
+                  <div className="mb-2 flex items-center justify-center gap-2">
+                    <CloudSparkle className="h-3.5 w-3.5 text-[#F8D65C]/90" />
                     <LittleHeart className="h-4 w-4 text-[#F29AC2]/80" />
                   </div>
                   <p className="text-xs text-[#93A099] sm:text-[0.82rem]">Made with a little bit of colour.</p>

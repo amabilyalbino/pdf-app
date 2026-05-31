@@ -263,6 +263,11 @@ export default function App({
     [workingDocument]
   );
 
+  const valueRequiredFields = useMemo(
+    () => workingDocument?.fields.filter((field) => field.type === "text" || field.type === "date") ?? [],
+    [workingDocument]
+  );
+
   const assignedSignatureFields = useMemo(
     () => signatureFields.filter((field) => Boolean(field.signatureProfileId)),
     [signatureFields]
@@ -270,6 +275,7 @@ export default function App({
 
   const hasAnyFields = (workingDocument?.fields.length ?? 0) > 0;
   const missingSignatureCount = Math.max(signatureFields.length - assignedSignatureFields.length, 0);
+  const missingValueCount = valueRequiredFields.filter((field) => !(field.value ?? "").trim()).length;
 
   const exportBlockers = useMemo(() => {
     const blockers: string[] = [];
@@ -280,19 +286,27 @@ export default function App({
     }
 
     if (!hasAnyFields) {
-      blockers.push("No fields added yet. Add at least one field before exporting.");
+      blockers.push("No fields added yet.");
     }
 
     if (missingSignatureCount === 1) {
-      blockers.push("Export blocked: 1 signature field still needs a saved signature.");
+      blockers.push("Export blocked: 1 signature required.");
     }
 
     if (missingSignatureCount > 1) {
-      blockers.push(`Export blocked: ${missingSignatureCount} signature fields still need saved signatures.`);
+      blockers.push(`Export blocked: ${missingSignatureCount} signatures required.`);
+    }
+
+    if (missingValueCount === 1) {
+      blockers.push("Export blocked: 1 field value required.");
+    }
+
+    if (missingValueCount > 1) {
+      blockers.push(`Export blocked: ${missingValueCount} field values required.`);
     }
 
     return blockers;
-  }, [hasAnyFields, missingSignatureCount, workingDocument]);
+  }, [hasAnyFields, missingSignatureCount, missingValueCount, workingDocument]);
 
   const canExport = workingDocument !== null && hasAnyFields && exportBlockers.length === 0;
   const hasWorkingDocument = Boolean(workingDocument && pdfDocumentProxy);
@@ -317,12 +331,16 @@ export default function App({
   const exportReadinessMessage = !workingDocument
     ? "Import a PDF to continue."
     : !hasAnyFields
-      ? "No fields added yet. Add at least one field before exporting."
+      ? "No fields added yet."
       : missingSignatureCount === 1
-        ? "Export blocked: 1 signature field still needs a saved signature."
+        ? "Export blocked: 1 signature required."
         : missingSignatureCount > 1
-          ? `Export blocked: ${missingSignatureCount} signature fields still need saved signatures.`
-          : "Ready to export. All fields are complete.";
+          ? `Export blocked: ${missingSignatureCount} signatures required.`
+          : missingValueCount === 1
+            ? "Export blocked: 1 field value required."
+            : missingValueCount > 1
+              ? `Export blocked: ${missingValueCount} field values required.`
+              : "Ready to export.";
   const exportReadinessTone = !workingDocument || !hasAnyFields ? "neutral" : canExport ? "success" : "warning";
   const canvasHelperMessage =
     selectedField
@@ -1179,7 +1197,7 @@ export default function App({
                 </div>
               </div>
               <div className={`export-readiness export-readiness--${exportReadinessTone}`}>
-                <strong>{canExport ? "Export ready" : exportReadinessTone === "warning" ? "Export blocked" : "Next step"}</strong>
+                <strong>Export status</strong>
                 <span>{exportReadinessMessage}</span>
               </div>
 
@@ -1283,8 +1301,8 @@ export default function App({
                         <strong>Signature field</strong>
                         <span>
                           {selectedField.signatureProfileId
-                            ? "Use the signatures panel to swap or remove this signature."
-                            : "Choose a saved signature from the left to fill this field."}
+                            ? "Signature applied. Use the signatures panel to replace or remove it."
+                            : "Needs a signature. Choose or create one in the signatures panel."}
                         </span>
                         {selectedField.signatureProfileId ? (
                           <button type="button" className="button button--chip" onClick={clearSelectedSignatureField}>
@@ -1308,7 +1326,7 @@ export default function App({
                       </label>
                     ) : (
                       <label className="form-field">
-                        <span>{selectedField.type === "date" ? "Value" : "Label or value"}</span>
+                        <span>Value</span>
                         <input
                           value={selectedField.value ?? ""}
                           onChange={(event) => updateField({ ...selectedField, value: event.target.value })}
@@ -1416,34 +1434,6 @@ export default function App({
                         Delete field
                       </button>
                     </div>
-
-                    <details className="advanced-details">
-                      <summary>Advanced details</summary>
-                      <div className="stack compact">
-                        <label className="form-field">
-                          <span>Internal name</span>
-                          <input
-                            value={selectedField.name}
-                            onChange={(event) => updateField({ ...selectedField, name: event.target.value })}
-                          />
-                        </label>
-                        {selectedField.type !== "signature" ? (
-                          <label className="form-field">
-                            <span>Binding key</span>
-                            <input
-                              value={selectedField.bindingKey ?? ""}
-                              placeholder="company_name"
-                              onChange={(event) =>
-                                updateField({
-                                  ...selectedField,
-                                  bindingKey: event.target.value || undefined
-                                })
-                              }
-                            />
-                          </label>
-                        ) : null}
-                      </div>
-                    </details>
                   </div>
                 ) : (
                   <p className="helper-copy">Select a field on the document to edit its settings.</p>

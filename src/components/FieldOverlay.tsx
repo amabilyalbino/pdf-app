@@ -76,6 +76,9 @@ export function FieldOverlay({
     mode: "move" | "resize"
   ) {
     event.stopPropagation();
+    if (event.button !== 0) {
+      return;
+    }
     dragMode.current = mode;
     startRef.current = {
       pointerX: event.clientX,
@@ -128,25 +131,17 @@ export function FieldOverlay({
   function renderFieldContent() {
     if (field.type === "checkbox") {
       return (
-        <button
-          type="button"
+        <div
           className={`field-box__checkbox ${field.checked ? "is-checked" : ""}`}
-          onClick={(event) => {
-            event.stopPropagation();
-            onChange({
-              ...field,
-              checked: !field.checked
-            });
-          }}
         >
           {field.checked ? "✓" : ""}
-        </button>
+        </div>
       );
     }
 
     if (field.type === "signature") {
       return (
-        <div className="field-box__signature">
+        <div className={`field-box__signature ${resolvedSignature?.image ? "has-image" : "is-placeholder"}`}>
           {resolvedSignature?.image ? (
             <>
               <img src={resolvedSignature.image} alt={resolvedSignature.label} />
@@ -160,48 +155,17 @@ export function FieldOverlay({
     }
 
     if (field.type === "date") {
-      if (!selected) {
-        return (
-          <div className={`field-box__preview ${previewValue ? "" : "is-placeholder"}`}>
-            {previewValue || "Date"}
-          </div>
-        );
-      }
-
-      return (
-        <input
-          type="date"
-          value={field.value ?? ""}
-          onChange={(event) =>
-            onChange({
-              ...field,
-              value: event.target.value
-            })
-          }
-        />
-      );
-    }
-
-    if (!selected) {
       return (
         <div className={`field-box__preview ${previewValue ? "" : "is-placeholder"}`}>
-          {previewValue || (field.bindingKey ? field.bindingKey : "Text")}
+          {previewValue || "Date"}
         </div>
       );
     }
 
     return (
-      <input
-        type="text"
-        value={displayValue}
-        placeholder={field.bindingKey ? `Linked: ${field.bindingKey}` : "Type here"}
-        onChange={(event) =>
-          onChange({
-            ...field,
-            value: event.target.value
-          })
-        }
-      />
+      <div className={`field-box__preview ${previewValue ? "" : "is-placeholder"}`}>
+        {previewValue || "Text"}
+      </div>
     );
   }
 
@@ -223,6 +187,10 @@ export function FieldOverlay({
         event.stopPropagation();
         onSelect();
       }}
+      onPointerDown={(event) => {
+        onSelect();
+        beginDrag(event, "move");
+      }}
       onPointerMove={updateDrag}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
@@ -233,15 +201,24 @@ export function FieldOverlay({
           <div className="field-box__toolbar">
             <button
               type="button"
-              className="field-box__toolbar-handle"
-              onPointerDown={(event) => beginDrag(event, "move")}
+              className="field-box__toolbar-action"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDuplicate();
+              }}
             >
-              Drag
-            </button>
-            <button type="button" className="field-box__toolbar-action" onClick={onDuplicate}>
               Copy
             </button>
-            <button type="button" className="field-box__toolbar-action danger" onClick={onDelete}>
+            <button
+              type="button"
+              className="field-box__toolbar-action danger"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onDelete();
+              }}
+            >
               Delete
             </button>
           </div>

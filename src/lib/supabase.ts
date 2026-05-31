@@ -3,6 +3,7 @@ import { parseAllowedEmails } from "./auth";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ?? "";
 const supabasePublishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "";
+const builtinAllowedEmails = ["bkennedylo@plusstudio.co"];
 
 function buildAuthStorageKey(url: string) {
   try {
@@ -12,7 +13,9 @@ function buildAuthStorageKey(url: string) {
   }
 }
 
-export const allowedEmails = parseAllowedEmails(import.meta.env.VITE_ALLOWED_EMAILS);
+export const allowedEmails = parseAllowedEmails(
+  [import.meta.env.VITE_ALLOWED_EMAILS ?? "", ...builtinAllowedEmails].filter(Boolean).join(",")
+);
 export const hasSupabaseEnv = Boolean(supabaseUrl && supabasePublishableKey);
 export const hasProtectedAuthSetup = hasSupabaseEnv && allowedEmails.length > 0;
 

@@ -210,6 +210,7 @@ export async function exportPdfDocument(options: {
   const pdfDocument = await PDFDocument.load(clonePdfBytes(options.importedPdf.bytes));
   const font = await pdfDocument.embedFont(StandardFonts.Helvetica);
   const fontBold = await pdfDocument.embedFont(StandardFonts.HelveticaBold);
+  const checkboxColor = rgb(0.11, 0.11, 0.12);
 
   for (const field of options.fields) {
     const page = pdfDocument.getPage(field.page);
@@ -217,16 +218,43 @@ export async function exportPdfDocument(options: {
     const coordinates = calculatePdfCoordinates(field, pageMapping);
 
     if (field.type === "checkbox") {
-      if (!field.checked) {
-        continue;
-      }
-
       page.drawRectangle({
         x: coordinates.x,
         y: coordinates.y,
         width: coordinates.width,
         height: coordinates.height,
-        color: rgb(0.06, 0.17, 0.23)
+        borderColor: checkboxColor,
+        borderWidth: 1.15
+      });
+
+      if (!field.checked) {
+        continue;
+      }
+
+      page.drawLine({
+        start: {
+          x: coordinates.x + coordinates.width * 0.22,
+          y: coordinates.y + coordinates.height * 0.48
+        },
+        end: {
+          x: coordinates.x + coordinates.width * 0.44,
+          y: coordinates.y + coordinates.height * 0.24
+        },
+        thickness: 1.4,
+        color: checkboxColor
+      });
+
+      page.drawLine({
+        start: {
+          x: coordinates.x + coordinates.width * 0.42,
+          y: coordinates.y + coordinates.height * 0.24
+        },
+        end: {
+          x: coordinates.x + coordinates.width * 0.8,
+          y: coordinates.y + coordinates.height * 0.76
+        },
+        thickness: 1.4,
+        color: checkboxColor
       });
       continue;
     }

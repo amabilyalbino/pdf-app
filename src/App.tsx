@@ -20,6 +20,7 @@ import {
 } from "./lib/storage";
 import { isTauriApp, saveBytesWithDialog } from "./lib/tauri";
 import { buildExportHistoryEntry, matchTemplates } from "./lib/templates";
+import { removeWhiteBackgroundFromDataUrl } from "./lib/signature";
 import type {
   AppStore,
   FieldType,
@@ -101,7 +102,9 @@ export default function App({
   const [signatureDraft, setSignatureDraft] = useState<SignatureDraft>({
     sourceType: "upload",
     dataUrl: "",
-    fileName: ""
+    fileName: "",
+    originalDataUrl: "",
+    transparentBackground: true
   });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pageStageRef = useRef<HTMLDivElement | null>(null);
@@ -617,6 +620,27 @@ export default function App({
     return `Signature ${String(store.signatureProfiles.length + 1).padStart(2, "0")}`;
   }
 
+  async function updateSignatureTransparency(enabled: boolean) {
+    const originalDataUrl = signatureDraft.originalDataUrl ?? "";
+    if (!originalDataUrl) {
+      setSignatureDraft((current) => ({
+        ...current,
+        transparentBackground: enabled
+      }));
+      return;
+    }
+
+    const nextDataUrl = enabled
+      ? await removeWhiteBackgroundFromDataUrl(originalDataUrl)
+      : originalDataUrl;
+
+    setSignatureDraft((current) => ({
+      ...current,
+      transparentBackground: enabled,
+      dataUrl: nextDataUrl
+    }));
+  }
+
   function activateSignatureProfile(profileId: string) {
     const profile = store.signatureProfiles.find((item) => item.id === profileId);
     if (!profile) {
@@ -685,7 +709,9 @@ export default function App({
     setSignatureDraft({
       sourceType: "upload",
       dataUrl: "",
-      fileName: ""
+      fileName: "",
+      originalDataUrl: "",
+      transparentBackground: true
     });
     setShowSignatureCreator(false);
     setWorkspacePanel("signatures");
@@ -927,52 +953,89 @@ export default function App({
                       <button
                         type="button"
                         className={signatureDraft.sourceType === "upload" ? "is-active" : ""}
-                        onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "upload" })}
+                        onClick={() =>
+                          setSignatureDraft((current) => ({
+                            ...current,
+                            sourceType: "upload"
+                          }))
+                        }
                       >
                         Upload
                       </button>
                       <button
                         type="button"
                         className={signatureDraft.sourceType === "draw" ? "is-active" : ""}
-                        onClick={() => setSignatureDraft({ ...signatureDraft, sourceType: "draw" })}
+                        onClick={() =>
+                          setSignatureDraft((current) => ({
+                            ...current,
+                            sourceType: "draw"
+                          }))
+                        }
                       >
                         Draw
                       </button>
                     </div>
                     {signatureDraft.sourceType === "upload" ? (
-                      <label className="upload-box">
-                        <span className="upload-box__title">Upload PNG or JPG</span>
-                        <div className="upload-box__row">
-                          <span className="upload-box__button">Choose file</span>
-                          <span className="upload-box__filename">{signatureDraft.fileName || "No file selected"}</span>
-                        </div>
-                        <input
-                          className="upload-box__input"
-                          type="file"
-                          accept="image/png,image/jpeg"
-                          onChange={async (event) => {
-                            const file = event.target.files?.[0];
-                            if (!file) {
-                              return;
-                            }
+                      <>
+                        <label className="upload-box">
+                          <span className="upload-box__title">Upload PNG or JPG</span>
+                          <div className="upload-box__row">
+                            <span className="upload-box__button">Choose file</span>
+                            <span className="upload-box__filename">{signatureDraft.fileName || "No file selected"}</span>
+                          </div>
+                          <input
+                            className="upload-box__input"
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            onChange={async (event) => {
+                              const file = event.target.files?.[0];
+                              if (!file) {
+                                return;
+                              }
 
-                            const reader = new FileReader();
-                            reader.onload = () => {
-                              setSignatureDraft((current) => ({
-                                ...current,
-                                dataUrl: String(reader.result ?? ""),
-                                fileName: file.name
-                              }));
-                            };
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                        {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
-                      </label>
+                              const reader = new FileReader();
+                              reader.onload = async () => {
+                                const originalDataUrl = String(reader.result ?? "");
+                                const nextDataUrl = signatureDraft.transparentBackground
+                                  ? await removeWhiteBackgroundFromDataUrl(originalDataUrl)
+                                  : originalDataUrl;
+
+                                setSignatureDraft((current) => ({
+                                  ...current,
+                                  dataUrl: nextDataUrl,
+                                  originalDataUrl,
+                                  fileName: file.name
+                                }));
+                              };
+                              reader.readAsDataURL(file);
+                            }}
+                          />
+                          {signatureDraft.dataUrl ? <img src={signatureDraft.dataUrl} alt="Signature preview" /> : null}
+                        </label>
+
+                        <label className="toggle-row toggle-row--subtle">
+                          <input
+                            type="checkbox"
+                            checked={signatureDraft.transparentBackground}
+                            onChange={(event) => {
+                              void updateSignatureTransparency(event.target.checked);
+                            }}
+                          />
+                          <span>Transparent background</span>
+                        </label>
+                        <p className="helper-copy">Remove white background from uploaded signatures.</p>
+                      </>
                     ) : (
                       <SignaturePad
                         initialDataUrl={signatureDraft.dataUrl}
-                        onChange={(dataUrl) => setSignatureDraft((current) => ({ ...current, dataUrl }))}
+                        onChange={(dataUrl) =>
+                          setSignatureDraft((current) => ({
+                            ...current,
+                            dataUrl,
+                            originalDataUrl: "",
+                            transparentBackground: true
+                          }))
+                        }
                       />
                     )}
                     <div className="panel__row-actions">

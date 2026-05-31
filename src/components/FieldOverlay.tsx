@@ -143,9 +143,7 @@ export function FieldOverlay({
   function renderFieldContent() {
     if (field.type === "checkbox") {
       return (
-        <div
-          className={`field-box__checkbox ${field.checked ? "is-checked" : ""}`}
-        >
+        <div className={`field-box__checkbox ${field.checked ? "is-checked" : ""}`}>
           {field.checked ? "✓" : ""}
         </div>
       );
@@ -155,10 +153,7 @@ export function FieldOverlay({
       return (
         <div className={`field-box__signature ${resolvedSignature?.image ? "has-image" : "is-placeholder"}`}>
           {resolvedSignature?.image ? (
-            <>
-              <img src={resolvedSignature.image} alt={resolvedSignature.label} />
-              {selected ? <span className="field-box__signature-label">{resolvedSignature.label}</span> : null}
-            </>
+            <img src={resolvedSignature.image} alt={resolvedSignature.label} />
           ) : (
             <span>Signature</span>
           )}

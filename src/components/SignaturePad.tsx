@@ -25,9 +25,7 @@ export function SignaturePad({ initialDataUrl, onChange }: SignaturePadProps) {
     context.lineJoin = "round";
     context.strokeStyle = "#09232b";
     context.lineWidth = 2.5;
-
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     if (!initialDataUrl) {
       return;
@@ -100,8 +98,7 @@ export function SignaturePad({ initialDataUrl, onChange }: SignaturePadProps) {
       return;
     }
 
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, canvas.width, canvas.height);
     setHasInk(false);
     onChange("");
   }

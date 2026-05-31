@@ -120,4 +120,6 @@ export type SignatureDraft = {
   sourceType: SignatureSourceType;
   dataUrl: string;
   fileName?: string;
+  originalDataUrl?: string;
+  transparentBackground: boolean;
 };

@@ -64,6 +64,13 @@ const FIELD_TYPE_ICONS: Record<FieldType, string> = {
   signature: "✦"
 };
 
+const FIELD_TYPE_ACTION_HELPERS: Record<FieldType, string> = {
+  text: "Add text",
+  date: "Add date",
+  checkbox: "Add checkbox",
+  signature: "Add signature"
+};
+
 type AppProps = {
   authEmail?: string | null;
   authProtected?: boolean;
@@ -321,14 +328,14 @@ export default function App({
     selectedField
       ? "Edit the selected field using the settings panel."
       : pendingFieldType === "text"
-        ? "Click on the PDF to place a text field."
+        ? "Text selected — click on the PDF to place a text field."
         : pendingFieldType === "date"
-          ? "Click on the PDF to place a date field."
+          ? "Date selected — click on the PDF to place a date field."
           : pendingFieldType === "checkbox"
-            ? "Click on the PDF to place a checkbox."
+            ? "Checkbox selected — click on the PDF to place a checkbox."
             : pendingFieldType === "signature"
-              ? "Click on the PDF to place a signature field."
-              : "Choose a tool on the left to start adding fields.";
+              ? "Signature selected — click on the PDF to place a signature field."
+              : "Choose what you want to add, then click on the PDF.";
 
   function flash(nextNotice: Notice) {
     setNotice(nextNotice);
@@ -937,29 +944,9 @@ export default function App({
                 </div>
               </section>
 
-              <section className="panel">
-                <div className="panel__header">
-                  <h2>Workflow</h2>
-                </div>
-                <div className="stack compact">
-                  <div className={`guide-step ${!hasAnyFields ? "is-active" : "is-complete"}`}>
-                    <strong>1. Add fields</strong>
-                    <span>Choose a tool and place fields on the PDF.</span>
-                  </div>
-                  <div className={`guide-step ${hasAnyFields && !canExport ? "is-active" : canExport ? "is-complete" : ""}`}>
-                    <strong>2. Review</strong>
-                    <span>Check values, signatures and placement.</span>
-                  </div>
-                  <div className={`guide-step ${canExport ? "is-active" : hasAnyFields ? "is-blocked" : ""}`}>
-                    <strong>3. Export</strong>
-                    <span>{canExport ? "Ready to export." : "Complete required fields before exporting."}</span>
-                  </div>
-                </div>
-              </section>
-
               <section className={`panel ${workspacePanel === "insert" ? "panel--focus" : ""}`}>
                 <div className="panel__header">
-                  <h2>Tools</h2>
+                  <h2>Add to PDF</h2>
                 </div>
                 <div className="field-grid">
                   {FIELD_TYPES.map((item) => (
@@ -968,18 +955,17 @@ export default function App({
                       type="button"
                       className={`field-type-card ${pendingFieldType === item.type ? "is-active" : ""}`}
                       onClick={() => beginFieldPlacement(item.type)}
-                    >
+                      >
                       <div className="field-type-card__header">
                         <span className="field-type-card__icon" aria-hidden="true">
                           {FIELD_TYPE_ICONS[item.type]}
                         </span>
                         <strong>{item.label}</strong>
                       </div>
-                      <span>{pendingFieldType === item.type ? "selected" : "place on page"}</span>
+                      <span>{pendingFieldType === item.type ? "Selected" : FIELD_TYPE_ACTION_HELPERS[item.type]}</span>
                     </button>
                   ))}
                 </div>
-                <p className="helper-copy">Select a tool, then click directly on the PDF to place it.</p>
               </section>
 
               <section className={`panel ${workspacePanel === "signatures" ? "panel--focus" : ""}`}>

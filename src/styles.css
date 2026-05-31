@@ -1181,9 +1181,9 @@ button {
 }
 
 .field-type-card span {
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.66rem;
+  letter-spacing: 0;
+  font-size: 0.72rem;
+  line-height: 1.25;
 }
 
 .form-field {

@@ -99,6 +99,68 @@ function EmailIcon({ className }: { className?: string }) {
   );
 }
 
+function PlantDoodle({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 56 72"
+      aria-hidden="true"
+      className={cx("h-16 w-12", className)}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="10" y="45" width="28" height="22" rx="8" fill="#F5A8BE" />
+      <path d="M24 45V23" stroke="#7CB98F" strokeWidth="3" strokeLinecap="round" />
+      <path d="M23 31c-10 0-15-9-15-18 10 0 16 8 15 18Z" fill="#8DCE9F" />
+      <path d="M25 25c0-10 8-17 18-18 0 10-7 18-18 18Z" fill="#A9DFB9" />
+      <path d="M23 39c-8 0-13-6-13-14 8 0 13 7 13 14Z" fill="#8DCE9F" />
+    </svg>
+  );
+}
+
+function CupDoodle({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 56 56"
+      aria-hidden="true"
+      className={cx("h-14 w-14", className)}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect x="8" y="18" width="28" height="24" rx="8" fill="#F8D65C" />
+      <path d="M36 23h4c4 0 7 3 7 7s-3 7-7 7h-4" stroke="#D39C34" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="18" cy="29" r="2" fill="#25332D" />
+      <circle cx="27" cy="29" r="2" fill="#25332D" />
+      <path d="M16 36c3 3 8 3 11 0" stroke="#25332D" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M20 10c-2 3-2 6 0 9" stroke="#F29AC2" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M27 8c-2 3-2 6 0 9" stroke="#F29AC2" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function CornerCloud({
+  className,
+  color = "#B8E3C8"
+}: {
+  className?: string;
+  color?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 180 120"
+      aria-hidden="true"
+      className={cx("h-28 w-40", className)}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M0 120c0-31 21-55 49-55 10 0 17 3 24 7 3-24 22-42 46-42 17 0 33 9 41 24 6-4 13-7 20-7v73H0Z"
+        fill={color}
+        fillOpacity="0.9"
+      />
+    </svg>
+  );
+}
+
 function MascotFace({ mood }: { mood: MascotMood }) {
   if (mood === "invalid") {
     return (
@@ -394,35 +456,68 @@ export function BrookieMagicLinkPage({
   return (
     <div className="min-h-screen overflow-hidden bg-[#F7F1EA] text-[#25332D]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <CornerCloud className="absolute -left-8 -top-3 rotate-[8deg] text-[#CDEBFA]" color="#CDEBFA" />
+        <CornerCloud className="absolute -right-10 -top-6 rotate-[182deg] text-[#B8E3C8] opacity-80" color="#B8E3C8" />
+        <CornerCloud className="absolute -bottom-10 -left-8 h-32 w-44 rotate-[6deg] opacity-95" color="#B8E3C8" />
+        <CornerCloud className="absolute -bottom-8 -right-8 h-32 w-44 rotate-[188deg] opacity-90" color="#D5C8F2" />
         <div className="absolute left-[-2rem] top-12 h-44 w-44 rounded-full bg-[#B8E3C8]/28 blur-3xl" />
         <div className="absolute right-[-1.5rem] top-28 h-36 w-36 rounded-full bg-[#CDEBFA]/38 blur-3xl" />
         <div className="absolute bottom-12 left-[-1rem] h-28 w-28 rounded-full bg-[#F29AC2]/14 blur-3xl" />
         <div className="absolute bottom-14 right-4 h-24 w-24 rounded-full bg-[#F8D65C]/18 blur-3xl" />
         <CloudSparkle className="absolute left-10 top-[4.25rem] h-6 w-6 animate-brookie-sparkle text-[#F8D65C]" />
         <CloudSparkle className="absolute right-14 top-[10.5rem] h-4 w-4 animate-brookie-sparkle text-[#CDEBFA]" />
+        <CloudSparkle className="absolute bottom-24 right-[22%] h-5 w-5 animate-brookie-sparkle text-[#F8D65C]" />
         <LittleHeart className="absolute right-10 top-[5.5rem] h-5 w-5 animate-brookie-drift" />
         <LittleHeart className="absolute left-14 top-[18rem] h-4 w-4 text-[#F8D65C] animate-brookie-sparkle" />
+        <LittleHeart className="absolute right-[24%] top-[27rem] h-4 w-4 text-[#F7A7C2] animate-brookie-sparkle" />
         <FlowerDoodle className="absolute bottom-[6rem] left-10 h-8 w-8 animate-brookie-drift" />
+        <FlowerDoodle className="absolute left-[12%] top-[14.5rem] h-7 w-7 animate-brookie-drift text-[#F7A7C2]" />
         <div className="absolute left-12 top-1/3 h-2.5 w-2.5 rounded-full bg-[#CDEBFA]" />
         <div className="absolute right-12 bottom-1/4 h-3 w-3 rounded-full bg-[#F29AC2]/70" />
         <div className="absolute right-[18%] top-[42%] h-2 w-2 rounded-full bg-[#F8D65C]/80" />
+        <div className="absolute left-[18%] top-[44%] h-2.5 w-2.5 rounded-full bg-[#CDEBFA]/90" />
       </div>
 
       <div className="relative mx-auto flex min-h-screen w-full max-w-[560px] items-center justify-center px-4 py-6 sm:px-6">
         <div className="relative w-full sm:-translate-y-6 md:-translate-y-10">
           <div className="mb-5 text-center sm:mb-6">
-            <h1 className="mx-auto max-w-[9ch] text-[3.2rem] font-semibold leading-[0.96] tracking-[-0.072em] sm:text-[3.6rem] md:text-[4rem]">
-              {isSuccess ? `Check your inbox, ${recipientName}!` : `Welcome, ${recipientName}!`}
-            </h1>
-            <p className="mx-auto mt-2.5 max-w-[26ch] text-[1rem] leading-7 text-[#6D7670] sm:text-[1.06rem] md:text-[1.08rem]">
-              {isSuccess ? "Your magic link is on its way." : "Hope your day feels as bright and colourful as you are."}
-            </p>
+            {isSuccess ? (
+              <>
+                <h1 className="mx-auto max-w-[10ch] text-[3rem] font-semibold leading-[0.98] tracking-[-0.072em] sm:text-[3.4rem] md:text-[3.85rem]">
+                  Check your inbox, {recipientName}!
+                </h1>
+                <p className="mx-auto mt-2.5 max-w-[24ch] text-[1rem] leading-7 text-[#6D7670] sm:text-[1.06rem] md:text-[1.08rem]">
+                  Your magic link is on its way.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-[1.1rem] font-medium tracking-[-0.04em] text-[#41524A] sm:text-[1.2rem]">Welcome,</p>
+                <h1 className="mx-auto mt-0.5 max-w-[9ch] text-[3.5rem] font-black leading-[0.9] tracking-[-0.08em] text-[#93D8AE] [text-shadow:0_2px_0_rgba(255,255,255,0.85)] sm:text-[4rem] md:text-[4.45rem]">
+                  {recipientName}!
+                </h1>
+                <p className="mx-auto mt-3 max-w-[26ch] text-[1rem] leading-7 text-[#5C6762] sm:text-[1.06rem] md:text-[1.08rem]">
+                  Hope your day feels as{" "}
+                  <span className="font-medium text-[#E6B542]">bright</span> and{" "}
+                  <span className="font-medium text-[#F29AC2]">colourful</span> as you are.
+                </p>
+              </>
+            )}
           </div>
 
           <div className="relative z-20 mb-[-4.4rem] flex justify-center sm:mb-[-4.9rem] md:mb-[-5.3rem]">
             <div className="relative">
               <div className="absolute inset-x-0 bottom-4 mx-auto h-[4.5rem] w-[8.5rem] rounded-full bg-[#B8E3C8]/22 blur-2xl md:h-[5rem] md:w-[9.25rem]" />
               <BrookieMascot mood={mascotMood} />
+              {!isSuccess ? (
+                <>
+                  <PlantDoodle className="absolute -left-6 bottom-0 hidden sm:block" />
+                  <div className="absolute -right-4 bottom-1 hidden sm:block">
+                    <LittleHeart className="absolute -top-5 left-5 h-4 w-4 text-[#F29AC2]" />
+                    <CupDoodle />
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
 
@@ -516,10 +611,11 @@ export function BrookieMagicLinkPage({
                   </span>
                 </button>
 
-                <div className="pt-2 text-center">
-                  <div className="mb-2 flex items-center justify-center gap-2">
-                    <CloudSparkle className="h-3.5 w-3.5 text-[#F8D65C]/90" />
+                <div className="pt-3 text-center">
+                  <div className="mb-2.5 flex items-center justify-center gap-3">
+                    <span className="h-px w-20 bg-[#E8E3DA]" />
                     <LittleHeart className="h-4 w-4 text-[#F29AC2]/80" />
+                    <span className="h-px w-20 bg-[#E8E3DA]" />
                   </div>
                   <p className="text-xs text-[#93A099] sm:text-[0.82rem]">Made with a little bit of colour.</p>
                 </div>
@@ -537,10 +633,11 @@ export function BrookieMagicLinkPage({
                   {isSubmitting ? "Sending a little link…" : "Send again"}
                 </button>
 
-                <div className="pt-2 text-center">
-                  <div className="mb-2 flex items-center justify-center gap-2">
-                    <CloudSparkle className="h-3.5 w-3.5 text-[#F8D65C]/90" />
+                <div className="pt-3 text-center">
+                  <div className="mb-2.5 flex items-center justify-center gap-3">
+                    <span className="h-px w-20 bg-[#E8E3DA]" />
                     <LittleHeart className="h-4 w-4 text-[#F29AC2]/80" />
+                    <span className="h-px w-20 bg-[#E8E3DA]" />
                   </div>
                   <p className="text-xs text-[#93A099] sm:text-[0.82rem]">Made with a little bit of colour.</p>
                 </div>

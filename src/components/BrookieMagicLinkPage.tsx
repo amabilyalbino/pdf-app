@@ -361,166 +361,140 @@ export function BrookieMagicLinkPage({
   return (
     <div className="min-h-screen overflow-hidden bg-[#F7F1EA] text-[#25332D]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-20 -top-16 h-56 w-56 rounded-full bg-[#B8E3C8]/45 blur-3xl" />
-        <div className="absolute right-[-3.5rem] top-16 h-48 w-48 rounded-full bg-[#CDEBFA]/50 blur-3xl" />
-        <div className="absolute bottom-[-3rem] left-1/3 h-40 w-40 rounded-full bg-[#F29AC2]/20 blur-3xl" />
-        <div className="absolute bottom-10 right-12 h-32 w-32 rounded-full bg-[#F8D65C]/25 blur-3xl" />
-        <CloudSparkle className="absolute left-10 top-16 h-7 w-7 animate-brookie-sparkle text-[#F8D65C]" />
-        <LittleHeart className="absolute right-20 top-28 animate-brookie-drift" />
-        <FlowerDoodle className="absolute bottom-14 left-12 animate-brookie-drift" />
+        <div className="absolute -left-12 top-10 h-44 w-44 rounded-full bg-[#B8E3C8]/28 blur-3xl" />
+        <div className="absolute right-[-2rem] top-24 h-36 w-36 rounded-full bg-[#CDEBFA]/38 blur-3xl" />
+        <div className="absolute bottom-8 left-[-1rem] h-28 w-28 rounded-full bg-[#F29AC2]/14 blur-3xl" />
+        <div className="absolute bottom-14 right-6 h-24 w-24 rounded-full bg-[#F8D65C]/18 blur-3xl" />
+        <CloudSparkle className="absolute left-8 top-[4.5rem] h-6 w-6 animate-brookie-sparkle text-[#F8D65C]" />
+        <LittleHeart className="absolute right-10 top-20 h-5 w-5 animate-brookie-drift" />
+        <FlowerDoodle className="absolute bottom-[4.5rem] left-10 h-8 w-8 animate-brookie-drift" />
+        <div className="absolute left-12 top-1/3 h-2.5 w-2.5 rounded-full bg-[#CDEBFA]" />
+        <div className="absolute right-12 bottom-1/4 h-3 w-3 rounded-full bg-[#F29AC2]/70" />
       </div>
 
-      <div className="relative mx-auto flex min-h-screen w-full max-w-6xl items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
-        <div className="relative w-full max-w-5xl pt-28 sm:pt-32">
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[520px] items-center justify-center px-4 py-8 sm:px-6">
+        <div className="relative w-full pt-34 sm:pt-38">
+          <div className="mb-8 text-center sm:mb-10">
+            <h1 className="mx-auto max-w-[12ch] text-5xl font-semibold leading-[0.94] tracking-[-0.07em] sm:text-6xl">
+              {isSuccess ? `Check your inbox, ${recipientName}!` : `Welcome, ${recipientName}!`}
+            </h1>
+            <p className="mx-auto mt-4 max-w-[24ch] text-lg leading-8 text-[#6D7670] sm:text-xl">
+              {isSuccess ? "Your magic link is on its way." : "Hope your day feels as bright and colourful as you are."}
+            </p>
+          </div>
+
           <div className="absolute inset-x-0 top-0 z-20 flex justify-center">
-            <div className="rounded-[2rem] bg-white/70 px-4 py-3 shadow-[0_16px_40px_rgba(37,51,45,0.08)] ring-1 ring-white/80 backdrop-blur-sm">
+            <div className="relative translate-y-6 sm:translate-y-8">
+              <div className="absolute inset-x-0 bottom-5 mx-auto h-16 w-28 rounded-full bg-[#B8E3C8]/22 blur-2xl" />
               <BrookieMascot mood={mascotMood} />
             </div>
           </div>
 
-          <section className="relative overflow-hidden rounded-[2rem] bg-white/94 px-5 pb-6 pt-28 shadow-[0_36px_90px_rgba(37,51,45,0.12)] ring-1 ring-[#25332D]/6 sm:px-8 sm:pb-8 sm:pt-32 lg:px-12">
-            <div className="absolute left-0 top-0 h-24 w-24 rounded-br-[3rem] bg-[#B8E3C8]/18" />
-            <div className="absolute bottom-0 right-0 h-24 w-24 rounded-tl-[3rem] bg-[#CDEBFA]/18" />
+          <section className="relative overflow-hidden rounded-[2rem] bg-white px-6 pb-7 pt-34 shadow-[0_28px_80px_rgba(37,51,45,0.10)] ring-1 ring-[#25332D]/5 sm:px-7 sm:pb-8 sm:pt-38">
+            <div className="absolute inset-x-0 top-0 h-18 bg-linear-to-b from-[#B8E3C8]/10 to-transparent" />
+            <div className="absolute left-5 top-24 h-3 w-3 rounded-full bg-[#F8D65C]/75" />
+            <div className="absolute right-5 top-26 h-2.5 w-2.5 rounded-full bg-[#CDEBFA]" />
+            {showValid ? <CloudSparkle className="absolute right-6 top-32 h-5 w-5 animate-brookie-sparkle text-[#F8D65C]" /> : null}
 
-            <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)] lg:items-start">
-              <div className="space-y-6">
-                <span className="inline-flex rounded-full border border-[#25332D]/10 bg-[#F7F1EA] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#6A786F]">
-                  Private workspace
-                </span>
-
-                <div className="space-y-4">
-                  <h1 className="max-w-[12ch] text-5xl font-semibold leading-[0.94] tracking-[-0.06em] sm:text-6xl lg:text-7xl">
-                    {isSuccess ? `Check your inbox, ${recipientName}!` : `Welcome, ${recipientName}!`}
-                  </h1>
-                  <p className="max-w-2xl text-lg leading-8 text-[#58655D] sm:text-xl">
-                    {isSuccess
-                      ? "Your magic link is on its way."
-                      : "Hope your day feels as bright and colourful as you are."}
-                  </p>
+            {!isSuccess ? (
+              <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                <div className="space-y-2">
+                  <label htmlFor={inputId} className="text-sm font-semibold text-[#25332D]">
+                    Email
+                  </label>
+                  <div
+                    className={cx(
+                      "group flex items-center rounded-[1.2rem] border bg-white px-4 py-3 shadow-[0_10px_28px_rgba(37,51,45,0.04)] transition duration-300",
+                      isFocused
+                        ? "border-[#A8DDBA] shadow-[0_0_0_6px_rgba(184,227,200,0.35)]"
+                        : showInvalid || submitError || externalError
+                          ? "border-[#E7B2B7] shadow-[0_0_0_4px_rgba(242,154,194,0.12)]"
+                          : showValid
+                            ? "border-[#B8E3C8] shadow-[0_0_0_4px_rgba(184,227,200,0.16)]"
+                            : "border-[#25332D]/10"
+                    )}
+                  >
+                    <input
+                      id={inputId}
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(event) => handleEmailChange(event.target.value)}
+                      onFocus={() => {
+                        setIsFocused(true);
+                        onClearExternalError?.();
+                      }}
+                      onBlur={() => {
+                        setIsFocused(false);
+                        setHasBlurred(true);
+                      }}
+                      placeholder="brookie@studio.com"
+                      className="w-full border-none bg-transparent text-lg text-[#25332D] outline-none placeholder:text-[#A7AEA9]"
+                      aria-invalid={showInvalid || !!submitError || !!externalError}
+                      aria-describedby={`${inputId}-helper`}
+                    />
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1.5rem] border border-[#25332D]/7 bg-[#FCFAF7] p-4 shadow-[0_14px_30px_rgba(37,51,45,0.05)]">
-                    <p className="text-sm font-semibold text-[#25332D]">Gentle access</p>
-                    <p className="mt-2 text-sm leading-6 text-[#6B7770]">
-                      A magic link opens your private space without a password to remember.
-                    </p>
-                  </div>
-                  <div className="rounded-[1.5rem] border border-[#25332D]/7 bg-[#FCFAF7] p-4 shadow-[0_14px_30px_rgba(37,51,45,0.05)]">
-                    <p className="text-sm font-semibold text-[#25332D]">Made for you</p>
-                    <p className="mt-2 text-sm leading-6 text-[#6B7770]">
-                      Soft colours, tiny sparkles, and a cosy little flow before the real work begins.
-                    </p>
-                  </div>
+                <div
+                  id={`${inputId}-helper`}
+                  aria-live="polite"
+                  className={cx(
+                    "min-h-6 text-sm leading-6 transition-colors",
+                    message.tone === "error"
+                      ? "text-[#C7646B]"
+                      : message.tone === "success"
+                        ? "text-[#5DA37A]"
+                        : "text-[#6D7670]"
+                  )}
+                >
+                  {message.text}
                 </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={cx(
+                    "inline-flex w-full items-center justify-center rounded-[1.2rem] px-5 py-4 text-base font-semibold text-[#25332D] transition duration-300",
+                    isSubmitting
+                      ? "cursor-wait bg-[#B8E3C8]/80 shadow-[0_14px_24px_rgba(168,221,186,0.35)]"
+                      : "bg-[#A8DDBA] shadow-[0_16px_30px_rgba(168,221,186,0.42)] hover:-translate-y-0.5 hover:bg-[#9AD5AF]"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    {isSubmitting ? (
+                      <>
+                        <span className="flex gap-1">
+                          <span className="h-2 w-2 rounded-full bg-[#25332D]/85 animate-brookie-pulse-soft" />
+                          <span className="h-2 w-2 rounded-full bg-[#25332D]/65 animate-brookie-pulse-soft [animation-delay:180ms]" />
+                          <span className="h-2 w-2 rounded-full bg-[#25332D]/45 animate-brookie-pulse-soft [animation-delay:360ms]" />
+                        </span>
+                        Sending a little link…
+                      </>
+                    ) : (
+                      "Send my magic link"
+                    )}
+                  </span>
+                </button>
+
+                <p className="pt-1 text-center text-sm text-[#8B958F]">Made with a little bit of colour.</p>
+              </form>
+            ) : (
+              <div className="space-y-5 text-center">
+                <p className="mx-auto max-w-[25ch] text-base leading-7 text-[#6D7670]">Your magic link is on its way.</p>
+
+                <button
+                  type="button"
+                  onClick={handleSendAgain}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-[#25332D] underline decoration-[#B8E3C8] underline-offset-4 transition hover:text-[#5DA37A]"
+                >
+                  {isSubmitting ? "Sending a little link…" : "Send again"}
+                </button>
+
+                <p className="pt-1 text-sm text-[#8B958F]">Made with a little bit of colour.</p>
               </div>
-
-              <div className="rounded-[1.75rem] border border-[#25332D]/8 bg-[#FFFEFC] p-5 shadow-[0_18px_40px_rgba(37,51,45,0.07)] sm:p-6">
-                {!isSuccess ? (
-                  <form className="space-y-5" onSubmit={handleSubmit} noValidate>
-                    <div className="space-y-2">
-                      <label htmlFor={inputId} className="text-sm font-semibold uppercase tracking-[0.2em] text-[#738178]">
-                        Email
-                      </label>
-                      <div
-                        className={cx(
-                          "group flex items-center rounded-[1.25rem] border bg-white px-4 py-3 shadow-sm transition duration-300",
-                          isFocused
-                            ? "border-[#7BCB9A] shadow-[0_0_0_6px_rgba(184,227,200,0.35)]"
-                            : showInvalid || submitError || externalError
-                              ? "border-[#E7B2B7] shadow-[0_0_0_4px_rgba(242,154,194,0.12)]"
-                              : showValid
-                                ? "border-[#B8E3C8] shadow-[0_0_0_4px_rgba(184,227,200,0.16)]"
-                                : "border-[#25332D]/10"
-                        )}
-                      >
-                        <input
-                          id={inputId}
-                          type="email"
-                          autoComplete="email"
-                          value={email}
-                          onChange={(event) => handleEmailChange(event.target.value)}
-                          onFocus={() => {
-                            setIsFocused(true);
-                            onClearExternalError?.();
-                          }}
-                          onBlur={() => {
-                            setIsFocused(false);
-                            setHasBlurred(true);
-                          }}
-                          placeholder="brookie@studio.com"
-                          className="w-full border-none bg-transparent text-lg text-[#25332D] outline-none placeholder:text-[#A8B1AB]"
-                          aria-invalid={showInvalid || !!submitError || !!externalError}
-                          aria-describedby={`${inputId}-helper`}
-                        />
-                      </div>
-                    </div>
-
-                    <div
-                      id={`${inputId}-helper`}
-                      aria-live="polite"
-                      className={cx(
-                        "min-h-6 text-sm leading-6 transition-colors",
-                        message.tone === "error"
-                          ? "text-[#C7646B]"
-                          : message.tone === "success"
-                            ? "text-[#5DA37A]"
-                            : "text-[#7B877F]"
-                      )}
-                    >
-                      {message.text}
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className={cx(
-                        "inline-flex w-full items-center justify-center rounded-[1.2rem] px-5 py-4 text-base font-semibold transition duration-300",
-                        isSubmitting
-                          ? "cursor-wait bg-[#25332D]/85 text-white shadow-[0_14px_24px_rgba(37,51,45,0.18)]"
-                          : "bg-[#25332D] text-white shadow-[0_18px_32px_rgba(37,51,45,0.2)] hover:-translate-y-0.5 hover:bg-[#30413A]"
-                      )}
-                    >
-                      <span className="flex items-center gap-2">
-                        {isSubmitting ? (
-                          <>
-                            <span className="flex gap-1">
-                              <span className="h-2 w-2 rounded-full bg-white/90 animate-brookie-pulse-soft" />
-                              <span className="h-2 w-2 rounded-full bg-white/70 animate-brookie-pulse-soft [animation-delay:180ms]" />
-                              <span className="h-2 w-2 rounded-full bg-white/55 animate-brookie-pulse-soft [animation-delay:360ms]" />
-                            </span>
-                            Sending a little link…
-                          </>
-                        ) : (
-                          "Send my magic link"
-                        )}
-                      </span>
-                    </button>
-                  </form>
-                ) : (
-                  <div className="space-y-5">
-                    <div className="rounded-[1.5rem] border border-[#B8E3C8]/60 bg-[#F7FBF8] p-5">
-                      <p className="text-sm uppercase tracking-[0.18em] text-[#7A8C82]">Confirmation</p>
-                      <h2 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#25332D]">
-                        Check your inbox, {recipientName}!
-                      </h2>
-                      <p className="mt-3 text-base leading-7 text-[#5F6D65]">Your magic link is on its way.</p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handleSendAgain}
-                      disabled={isSubmitting}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-[#25332D] underline decoration-[#B8E3C8] underline-offset-4 transition hover:text-[#5DA37A]"
-                    >
-                      {isSubmitting ? "Sending a little link…" : "Send again"}
-                    </button>
-                  </div>
-                )}
-
-                <p className="pt-3 text-center text-sm text-[#8B958F]">Made with a little bit of colour.</p>
-              </div>
-            </div>
+            )}
           </section>
         </div>
       </div>

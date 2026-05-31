@@ -1,3 +1,114 @@
+@import "tailwindcss";
+
+@keyframes brookie-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes brookie-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-2deg);
+  }
+  75% {
+    transform: rotate(2deg);
+  }
+}
+
+@keyframes brookie-blink {
+  0%,
+  44%,
+  100% {
+    transform: scaleY(1);
+  }
+  46%,
+  48% {
+    transform: scaleY(0.15);
+  }
+}
+
+@keyframes brookie-bounce-soft {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes brookie-pulse-soft {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.82;
+  }
+}
+
+@keyframes brookie-sparkle {
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-6px) scale(1.12);
+    opacity: 1;
+  }
+}
+
+@keyframes brookie-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(8px, -6px, 0);
+  }
+}
+
+@layer utilities {
+  .animate-brookie-float {
+    animation: brookie-float 4.8s ease-in-out infinite;
+  }
+
+  .animate-brookie-wiggle {
+    animation: brookie-wiggle 1.2s ease-in-out infinite;
+  }
+
+  .animate-brookie-blink {
+    animation: brookie-blink 5s ease-in-out infinite;
+  }
+
+  .animate-brookie-bounce-soft {
+    animation: brookie-bounce-soft 1.15s ease-in-out infinite;
+  }
+
+  .animate-brookie-pulse-soft {
+    animation: brookie-pulse-soft 1.4s ease-in-out infinite;
+  }
+
+  .animate-brookie-sparkle {
+    animation: brookie-sparkle 2.2s ease-in-out infinite;
+  }
+
+  .animate-brookie-drift {
+    animation: brookie-drift 8s ease-in-out infinite;
+  }
+}
+
 :root {
   color-scheme: light;
   --bg: #111111;
@@ -430,6 +541,97 @@ button {
   background: #ffffff;
   border: 1px solid var(--line);
   box-shadow: 0 18px 44px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card--welcome {
+  width: min(100%, 1040px);
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 360px minmax(0, 1fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.auth-card__visual {
+  position: relative;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(151, 244, 190, 0.44), transparent 28%),
+    radial-gradient(circle at 78% 26%, rgba(153, 198, 255, 0.42), transparent 30%),
+    linear-gradient(180deg, #f8f6ef 0%, #f2ede2 100%);
+  border: 1px solid rgba(16, 16, 16, 0.06);
+  min-height: 460px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.auth-card__spark {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  filter: blur(18px);
+}
+
+.auth-card__spark--left {
+  left: 24px;
+  top: 28px;
+}
+
+.auth-card__spark--right {
+  right: 18px;
+  bottom: 22px;
+}
+
+.auth-mascot {
+  width: min(78%, 280px);
+  display: block;
+}
+
+.auth-mascot svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.auth-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 10px 16px 0;
+}
+
+.auth-card__lead {
+  color: var(--ink);
+  font-size: 1.24rem;
+  line-height: 1.45;
+  max-width: 620px;
+}
+
+.auth-welcome-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.auth-welcome-button {
+  min-width: 220px;
+}
+
+.auth-form {
+  margin-top: 8px;
+  max-width: 520px;
+}
+
+.auth-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .auth-card h1 {
@@ -1089,6 +1291,18 @@ select {
 }
 
 @media (max-width: 900px) {
+  .auth-card--welcome {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-card__visual {
+    min-height: 280px;
+  }
+
+  .auth-card__content {
+    padding-right: 0;
+  }
+
   .masthead {
     flex-direction: column;
     align-items: stretch;
@@ -1114,6 +1328,16 @@ select {
 
   .hero-empty h2 {
     font-size: 2.6rem;
+  }
+
+  .auth-card--welcome {
+    padding: 16px;
+    gap: 18px;
+  }
+
+  .auth-card__visual {
+    min-height: 220px;
+    border-radius: 22px;
   }
 
   .editor__toolbar {

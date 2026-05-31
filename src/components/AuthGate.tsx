@@ -1,10 +1,11 @@
-import type { FormEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { getFriendlyAuthErrorMessage, isAllowedEmail, isRateLimitAuthErrorMessage, normalizeEmail } from "../lib/auth";
+import { getFriendlyAuthErrorMessage, isAllowedEmail, normalizeEmail } from "../lib/auth";
 import { setStorageScope } from "../lib/storage";
 import { allowedEmails, hasProtectedAuthSetup, hasSupabaseEnv, supabase } from "../lib/supabase";
 import { isTauriApp } from "../lib/tauri";
+import { BrookieMagicLinkPage } from "./BrookieMagicLinkPage";
 
 type AuthGateProps = {
   children: (options: {
@@ -46,29 +47,52 @@ function removeAuthSearchParams() {
   }
 }
 
+function AuthStatusCard({
+  eyebrow,
+  title,
+  body,
+  codes
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  codes?: string[];
+}) {
+  return (
+    <div className="min-h-screen bg-[#F7F1EA] px-4 py-10 text-[#25332D] sm:px-6 lg:px-8">
+      <div className="mx-auto flex min-h-screen max-w-4xl items-center justify-center">
+        <div className="w-full max-w-2xl rounded-[2rem] bg-white/95 p-8 shadow-[0_36px_90px_rgba(37,51,45,0.12)] ring-1 ring-[#25332D]/6 sm:p-10">
+          <span className="inline-flex rounded-full border border-[#25332D]/10 bg-[#F7F1EA] px-4 py-2 text-xs font-semibold uppercase tracking-[0.28em] text-[#6A786F]">
+            {eyebrow}
+          </span>
+          <h1 className="mt-6 text-4xl font-semibold leading-tight tracking-[-0.06em] sm:text-5xl">{title}</h1>
+          <p className="mt-5 text-lg leading-8 text-[#58655D]">{body}</p>
+          {codes?.length ? (
+            <div className="mt-8 flex flex-wrap gap-3">
+              {codes.map((code) => (
+                <code
+                  key={code}
+                  className="rounded-2xl border border-[#25332D]/10 bg-[#FCFAF7] px-4 py-3 text-sm text-[#4F5D55]"
+                >
+                  {code}
+                </code>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function AuthGate({ children }: AuthGateProps) {
   const desktopRuntime = isTauriApp();
   const devBypassActive = import.meta.env.DEV && !hasProtectedAuthSetup;
   const [loading, setLoading] = useState(!desktopRuntime && !devBypassActive);
-  const [email, setEmail] = useState("");
   const [session, setSession] = useState<Session | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
-  const [authNotice, setAuthNotice] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
-  const [cooldownUntil, setCooldownUntil] = useState(0);
-  const [clock, setClock] = useState(() => Date.now());
 
   const hasFullSetup = useMemo(() => hasProtectedAuthSetup, []);
-  const resendCooldownSeconds = Math.max(0, Math.ceil((cooldownUntil - clock) / 1000));
-
-  useEffect(() => {
-    if (cooldownUntil <= Date.now()) {
-      return;
-    }
-
-    const interval = window.setInterval(() => setClock(Date.now()), 1000);
-    return () => window.clearInterval(interval);
-  }, [cooldownUntil]);
 
   useEffect(() => {
     if (desktopRuntime || devBypassActive) {
@@ -92,7 +116,6 @@ export function AuthGate({ children }: AuthGateProps) {
       if (nextSession && !isAllowedEmail(nextEmail, allowedEmails)) {
         setStorageScope("anonymous");
         setSession(null);
-        setAuthNotice(null);
         setAuthError("This email is not approved for this workspace.");
         await client.auth.signOut();
         if (active) {
@@ -162,58 +185,32 @@ export function AuthGate({ children }: AuthGateProps) {
     };
   }, [desktopRuntime, devBypassActive]);
 
-  async function handleLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
+  async function handleLogin(email: string) {
     if (!supabase || !hasProtectedAuthSetup) {
-      return;
-    }
-
-    if (resendCooldownSeconds > 0) {
-      setAuthError(`Wait ${resendCooldownSeconds}s before requesting another sign-in link.`);
-      return;
+      throw new Error("Secure sign-in is not ready yet.");
     }
 
     const normalizedEmail = normalizeEmail(email);
     if (!normalizedEmail) {
-      setAuthError("Enter your approved email to continue.");
-      return;
+      throw new Error("Enter your approved email to continue.");
     }
 
     if (!isAllowedEmail(normalizedEmail, allowedEmails)) {
-      setAuthError("This email is not approved for this workspace.");
-      return;
+      throw new Error("This email is not approved for this workspace.");
     }
 
-    setIsSending(true);
     setAuthError(null);
-    setAuthNotice(null);
 
-    try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: normalizedEmail,
-        options: {
-          emailRedirectTo: new URL(window.location.pathname, window.location.origin).toString(),
-          shouldCreateUser: true
-        }
-      });
-
-      if (error) {
-        throw error;
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: new URL(window.location.pathname, window.location.origin).toString(),
+        shouldCreateUser: true
       }
+    });
 
-      setCooldownUntil(Date.now() + 60_000);
-      setClock(Date.now());
-      setAuthNotice(`Check ${normalizedEmail} for the secure sign-in link. You can request a new one in about a minute.`);
-    } catch (error) {
-      const nextMessage = getFriendlyAuthErrorMessage(error);
-      if (error instanceof Error && isRateLimitAuthErrorMessage(error.message)) {
-        setCooldownUntil(Date.now() + 60_000);
-        setClock(Date.now());
-      }
-      setAuthError(nextMessage);
-    } finally {
-      setIsSending(false);
+    if (error) {
+      throw new Error(getFriendlyAuthErrorMessage(error));
     }
   }
 
@@ -225,7 +222,6 @@ export function AuthGate({ children }: AuthGateProps) {
     await supabase.auth.signOut();
     setStorageScope("anonymous");
     setSession(null);
-    setAuthNotice(null);
     setAuthError(null);
   }
 
@@ -239,74 +235,44 @@ export function AuthGate({ children }: AuthGateProps) {
 
   if (!hasSupabaseEnv || !hasFullSetup) {
     return (
-      <div className="auth-shell">
-        <div className="auth-card auth-card--setup">
-          <p className="eyebrow">Authentication setup required</p>
-          <h1>Secure access is not configured yet.</h1>
-          <p>
-            Add the Supabase keys and the approved email list before sharing this app. Until then, the editor stays
-            locked.
-          </p>
-          <div className="auth-setup-list">
-            <code>VITE_SUPABASE_URL</code>
-            <code>VITE_SUPABASE_PUBLISHABLE_KEY</code>
-            <code>VITE_ALLOWED_EMAILS</code>
-          </div>
-          <p className="helper-copy">
-            Also add your production domain and <code>http://localhost:3000</code> to the Supabase Auth redirect URLs.
-          </p>
-        </div>
-      </div>
+      <AuthStatusCard
+        eyebrow="Authentication setup"
+        title="Secure access is not configured yet."
+        body="Add the Supabase keys and the approved email list before sharing this app. Until then, the editor stays locked."
+        codes={["VITE_SUPABASE_URL", "VITE_SUPABASE_PUBLISHABLE_KEY", "VITE_ALLOWED_EMAILS"]}
+      />
     );
   }
 
   if (loading) {
     return (
-      <div className="auth-shell">
-        <div className="auth-card auth-card--status">
-          <p className="eyebrow">Secure access</p>
-          <h1>Checking your session…</h1>
-          <p>We are verifying access before loading the PDF workspace.</p>
-        </div>
-      </div>
+      <AuthStatusCard
+        eyebrow="Secure access"
+        title="Checking your session…"
+        body="We are gently opening the door to your PDF workspace."
+      />
     );
   }
 
   if (session?.user?.email) {
-    return <>{children({ authEmail: session.user.email, authProtected: true, authBypassed: false, onSignOut: handleSignOut })}</>;
+    return (
+      <>
+        {children({
+          authEmail: session.user.email,
+          authProtected: true,
+          authBypassed: false,
+          onSignOut: handleSignOut
+        })}
+      </>
+    );
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        <p className="eyebrow">Private workspace</p>
-        <h1>Sign in to open the PDF editor.</h1>
-        <p>Only approved emails can access this workspace. We will send a magic link to your inbox.</p>
-
-        <form className="stack" onSubmit={handleLogin}>
-          <label className="form-field">
-            <span>Approved email</span>
-            <input
-              type="email"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@company.com"
-            />
-          </label>
-
-          {authError ? <div className="auth-message auth-message--error">{authError}</div> : null}
-          {authNotice ? <div className="auth-message auth-message--success">{authNotice}</div> : null}
-
-          <button type="submit" className="button" disabled={isSending || resendCooldownSeconds > 0}>
-            {isSending
-              ? "Sending link..."
-              : resendCooldownSeconds > 0
-                ? `Try again in ${resendCooldownSeconds}s`
-                : "Send secure sign-in link"}
-          </button>
-        </form>
-      </div>
-    </div>
+    <BrookieMagicLinkPage
+      recipientName="Brookie"
+      externalError={authError}
+      onClearExternalError={() => setAuthError(null)}
+      onSubmit={handleLogin}
+    />
   );
 }

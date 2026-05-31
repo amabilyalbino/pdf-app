@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { FillProfile, PlacedField, SignatureProfile } from "../types";
 import { clamp } from "../lib/field";
 
@@ -26,6 +26,7 @@ export function FieldOverlay({
   onDelete
 }: FieldOverlayProps) {
   const dragMode = useRef<"move" | "resize" | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const startRef = useRef<{
     pointerX: number;
     pointerY: number;
@@ -70,6 +71,17 @@ export function FieldOverlay({
 
     return displayValue;
   }, [displayValue, field.type, field.value]);
+
+  useEffect(() => {
+    if (!selected || (field.type !== "text" && field.type !== "date")) {
+      return;
+    }
+
+    inputRef.current?.focus();
+    if (field.type === "text") {
+      inputRef.current?.setSelectionRange(field.value?.length ?? 0, field.value?.length ?? 0);
+    }
+  }, [field.id, field.type, selected]);
 
   function beginDrag(
     event: React.PointerEvent<HTMLButtonElement | HTMLDivElement>,
@@ -155,10 +167,59 @@ export function FieldOverlay({
     }
 
     if (field.type === "date") {
+      if (selected) {
+        return (
+          <input
+            ref={inputRef}
+            className="field-box__input field-box__input--date"
+            type="date"
+            value={field.value ?? ""}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) =>
+              onChange({
+                ...field,
+                value: event.target.value
+              })
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.currentTarget.blur();
+              }
+            }}
+          />
+        );
+      }
+
       return (
         <div className={`field-box__preview ${previewValue ? "" : "is-placeholder"}`}>
           {previewValue || "Date"}
         </div>
+      );
+    }
+
+    if (selected) {
+      return (
+        <input
+          ref={inputRef}
+          className="field-box__input"
+          type="text"
+          value={displayValue}
+          placeholder="Text"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) =>
+            onChange({
+              ...field,
+              value: event.target.value
+            })
+          }
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.currentTarget.blur();
+            }
+          }}
+        />
       );
     }
 
@@ -187,10 +248,6 @@ export function FieldOverlay({
         event.stopPropagation();
         onSelect();
       }}
-      onPointerDown={(event) => {
-        onSelect();
-        beginDrag(event, "move");
-      }}
       onPointerMove={updateDrag}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
@@ -198,6 +255,12 @@ export function FieldOverlay({
       <div className="field-box__content">{renderFieldContent()}</div>
       {selected ? (
         <>
+          <button
+            type="button"
+            className="field-box__move-handle"
+            aria-label="Move field"
+            onPointerDown={(event) => beginDrag(event, "move")}
+          />
           <div className="field-box__toolbar">
             <button
               type="button"

@@ -289,20 +289,14 @@ export default function App({
       blockers.push("No fields added yet.");
     }
 
-    if (missingSignatureCount === 1) {
-      blockers.push("Export blocked: 1 signature required.");
-    }
-
-    if (missingSignatureCount > 1) {
-      blockers.push(`Export blocked: ${missingSignatureCount} signatures required.`);
-    }
-
-    if (missingValueCount === 1) {
-      blockers.push("Export blocked: 1 field value required.");
-    }
-
-    if (missingValueCount > 1) {
-      blockers.push(`Export blocked: ${missingValueCount} field values required.`);
+    if (hasAnyFields) {
+      if (missingSignatureCount > 0 && missingValueCount > 0) {
+        blockers.push("Complete the missing fields before exporting.");
+      } else if (missingSignatureCount > 0) {
+        blockers.push("Add a signature before exporting.");
+      } else if (missingValueCount > 0) {
+        blockers.push(`Add content to ${missingValueCount} field${missingValueCount === 1 ? "" : "s"} before exporting.`);
+      }
     }
 
     return blockers;
@@ -332,15 +326,13 @@ export default function App({
     ? "Import a PDF to continue."
     : !hasAnyFields
       ? "No fields added yet."
-      : missingSignatureCount === 1
-        ? "Export blocked: 1 signature required."
-        : missingSignatureCount > 1
-          ? `Export blocked: ${missingSignatureCount} signatures required.`
-          : missingValueCount === 1
-            ? "Export blocked: 1 field value required."
-            : missingValueCount > 1
-              ? `Export blocked: ${missingValueCount} field values required.`
-              : "Ready to export.";
+      : missingSignatureCount > 0 && missingValueCount > 0
+        ? "Complete the missing fields before exporting."
+        : missingSignatureCount > 0
+          ? "Add a signature before exporting."
+          : missingValueCount > 0
+            ? `Add content to ${missingValueCount} field${missingValueCount === 1 ? "" : "s"} before exporting.`
+            : "Ready to export.";
   const exportReadinessTone = !workingDocument || !hasAnyFields ? "neutral" : canExport ? "success" : "warning";
   const canvasHelperMessage =
     selectedField
@@ -1197,7 +1189,6 @@ export default function App({
                 </div>
               </div>
               <div className={`export-readiness export-readiness--${exportReadinessTone}`}>
-                <strong>Export status</strong>
                 <span>{exportReadinessMessage}</span>
               </div>
 
@@ -1278,162 +1269,260 @@ export default function App({
                   <h2>Field settings</h2>
                 </div>
                 {selectedField ? (
-                  <div className="stack">
-                    <div className="meta-card meta-card--minimal">
-                      <strong>{FIELD_TYPE_LABELS[selectedField.type].replace(/^\w/, (character) => character.toUpperCase())} field</strong>
-                      <span>
-                        {selectedField.type === "signature"
-                          ? selectedField.signatureProfileId
-                            ? "Signature assigned"
-                            : "Needs a signature"
-                          : selectedField.type === "checkbox"
-                            ? selectedField.checked
-                              ? "Checked"
-                              : "Unchecked"
-                            : selectedField.value
-                              ? "Ready"
-                              : "Empty"}
-                      </span>
-                    </div>
-
+                  <div className="stack inspector-stack">
                     {selectedField.type === "signature" ? (
-                      <div className="context-banner">
-                        <strong>Signature field</strong>
-                        <span>
-                          {selectedField.signatureProfileId
-                            ? "Signature applied. Use the signatures panel to replace or remove it."
-                            : "Needs a signature. Choose or create one in the signatures panel."}
-                        </span>
-                        {selectedField.signatureProfileId ? (
-                          <button type="button" className="button button--chip" onClick={clearSelectedSignatureField}>
-                            Remove signature
-                          </button>
-                        ) : null}
+                      <div className="stack compact">
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Signature</h3>
+                          <div className="context-banner">
+                            <strong>{selectedField.signatureProfileId ? "Signature applied" : "Needs a signature"}</strong>
+                            <span>
+                              {selectedField.signatureProfileId
+                                ? "Use the signatures panel to replace or remove it."
+                                : "Choose or create a signature in the signatures panel."}
+                            </span>
+                            {selectedField.signatureProfileId ? (
+                              <button type="button" className="button button--chip" onClick={clearSelectedSignatureField}>
+                                Remove signature
+                              </button>
+                            ) : null}
+                          </div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Size</h3>
+                          <div className="inline-grid">
+                            <label className="form-field">
+                              <span>Width</span>
+                              <input
+                                type="number"
+                                min={0.04}
+                                max={1}
+                                step={0.01}
+                                value={selectedField.width}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    width: Number(event.target.value)
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="form-field">
+                              <span>Height</span>
+                              <input
+                                type="number"
+                                min={0.03}
+                                max={1}
+                                step={0.01}
+                                value={selectedField.height}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    height: Number(event.target.value)
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Actions</h3>
+                          <div className="inline-grid">
+                            <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
+                              Duplicate field
+                            </button>
+                            <button type="button" className="button button--danger" onClick={() => removeField(selectedField.id)}>
+                              Delete field
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ) : selectedField.type === "checkbox" ? (
-                      <label className="toggle-row">
-                        <input
-                          type="checkbox"
-                          checked={Boolean(selectedField.checked)}
-                          onChange={(event) =>
-                            updateField({
-                              ...selectedField,
-                              checked: event.target.checked
-                            })
-                          }
-                        />
-                        <span>Checked</span>
-                      </label>
-                    ) : (
-                      <label className="form-field">
-                        <span>Value</span>
-                        <input
-                          value={selectedField.value ?? ""}
-                          onChange={(event) => updateField({ ...selectedField, value: event.target.value })}
-                        />
-                      </label>
-                    )}
-
-                    <div className="inline-grid">
-                      <label className="form-field">
-                        <span>Width</span>
-                        <input
-                          type="number"
-                          min={0.04}
-                          max={1}
-                          step={0.01}
-                          value={selectedField.width}
-                          onChange={(event) =>
-                            updateField({
-                              ...selectedField,
-                              width: Number(event.target.value)
-                            })
-                          }
-                        />
-                      </label>
-                      <label className="form-field">
-                        <span>Height</span>
-                        <input
-                          type="number"
-                          min={0.03}
-                          max={1}
-                          step={0.01}
-                          value={selectedField.height}
-                          onChange={(event) =>
-                            updateField({
-                              ...selectedField,
-                              height: Number(event.target.value)
-                            })
-                          }
-                        />
-                      </label>
-                    </div>
-
-                    {selectedField.type !== "checkbox" && selectedField.type !== "signature" ? (
-                      <>
-                        <div className="inline-grid">
-                          <label className="form-field">
-                            <span>Font size</span>
+                      <div className="stack compact">
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Checkbox</h3>
+                          <label className="toggle-row">
                             <input
-                              type="number"
-                              min={10}
-                              max={32}
-                              value={selectedField.style.fontSize}
+                              type="checkbox"
+                              checked={Boolean(selectedField.checked)}
                               onChange={(event) =>
                                 updateField({
                                   ...selectedField,
-                                  style: {
-                                    ...selectedField.style,
-                                    fontSize: Number(event.target.value)
-                                  }
+                                  checked: event.target.checked
                                 })
                               }
                             />
+                            <span>Checked</span>
                           </label>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Size</h3>
+                          <div className="inline-grid">
+                            <label className="form-field">
+                              <span>Width</span>
+                              <input
+                                type="number"
+                                min={0.04}
+                                max={1}
+                                step={0.01}
+                                value={selectedField.width}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    width: Number(event.target.value)
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="form-field">
+                              <span>Height</span>
+                              <input
+                                type="number"
+                                min={0.03}
+                                max={1}
+                                step={0.01}
+                                value={selectedField.height}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    height: Number(event.target.value)
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Actions</h3>
+                          <div className="inline-grid">
+                            <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
+                              Duplicate field
+                            </button>
+                            <button type="button" className="button button--danger" onClick={() => removeField(selectedField.id)}>
+                              Delete field
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="stack compact">
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">
+                            {selectedField.type === "date" ? "Date" : "Text"}
+                          </h3>
                           <label className="form-field">
-                            <span>Text color</span>
+                            <span>Value</span>
                             <input
-                              type="color"
-                              value={selectedField.style.color}
-                              onChange={(event) =>
-                                updateField({
-                                  ...selectedField,
-                                  style: {
-                                    ...selectedField.style,
-                                    color: event.target.value
-                                  }
-                                })
-                              }
+                              value={selectedField.value ?? ""}
+                              onChange={(event) => updateField({ ...selectedField, value: event.target.value })}
                             />
                           </label>
                         </div>
-                        <label className="toggle-row">
-                          <input
-                            type="checkbox"
-                            checked={selectedField.style.bold}
-                            onChange={(event) =>
-                              updateField({
-                                ...selectedField,
-                                style: {
-                                  ...selectedField.style,
-                                  bold: event.target.checked
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Appearance</h3>
+                          <div className="inline-grid">
+                            <label className="form-field">
+                              <span>Font size</span>
+                              <input
+                                type="number"
+                                min={10}
+                                max={32}
+                                value={selectedField.style.fontSize}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    style: {
+                                      ...selectedField.style,
+                                      fontSize: Number(event.target.value)
+                                    }
+                                  })
                                 }
-                              })
-                            }
-                          />
-                          <span>Bold text</span>
-                        </label>
-                      </>
-                    ) : null}
-
-                    <div className="inline-grid">
-                      <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
-                        Duplicate field
-                      </button>
-                      <button type="button" className="button button--danger" onClick={() => removeField(selectedField.id)}>
-                        Delete field
-                      </button>
-                    </div>
+                              />
+                            </label>
+                            <label className="form-field">
+                              <span>Text colour</span>
+                              <input
+                                type="color"
+                                value={selectedField.style.color}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    style: {
+                                      ...selectedField.style,
+                                      color: event.target.value
+                                    }
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                          <label className="toggle-row">
+                            <input
+                              type="checkbox"
+                              checked={selectedField.style.bold}
+                              onChange={(event) =>
+                                updateField({
+                                  ...selectedField,
+                                  style: {
+                                    ...selectedField.style,
+                                    bold: event.target.checked
+                                  }
+                                })
+                              }
+                            />
+                            <span>Bold</span>
+                          </label>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Size</h3>
+                          <div className="inline-grid">
+                            <label className="form-field">
+                              <span>Width</span>
+                              <input
+                                type="number"
+                                min={0.04}
+                                max={1}
+                                step={0.01}
+                                value={selectedField.width}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    width: Number(event.target.value)
+                                  })
+                                }
+                              />
+                            </label>
+                            <label className="form-field">
+                              <span>Height</span>
+                              <input
+                                type="number"
+                                min={0.03}
+                                max={1}
+                                step={0.01}
+                                value={selectedField.height}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    height: Number(event.target.value)
+                                  })
+                                }
+                              />
+                            </label>
+                          </div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Actions</h3>
+                          <div className="inline-grid">
+                            <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
+                              Duplicate field
+                            </button>
+                            <button type="button" className="button button--danger" onClick={() => removeField(selectedField.id)}>
+                              Delete field
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="helper-copy">Select a field on the document to edit its settings.</p>

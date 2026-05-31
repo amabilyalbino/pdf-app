@@ -265,24 +265,26 @@ export function FieldOverlay({
             <button
               type="button"
               className="field-box__toolbar-action"
+              aria-label="Duplicate field"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 onDuplicate();
               }}
             >
-              Copy
+              ⧉
             </button>
             <button
               type="button"
               className="field-box__toolbar-action danger"
+              aria-label="Delete field"
               onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 onDelete();
               }}
             >
-              Delete
+              ✕
             </button>
           </div>
           <button

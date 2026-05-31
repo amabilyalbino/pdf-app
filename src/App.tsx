@@ -811,7 +811,11 @@ export default function App({
 
       <header className="topbar">
         <div className="topbar__brand">
+          <span className="topbar__mark" aria-hidden="true">
+            <span className="topbar__mark-core" />
+          </span>
           <strong>Ops PDF Studio</strong>
+          <span className="topbar__divider" aria-hidden="true" />
           <div className="topbar__document">
             <span className="topbar__filename">{workingDocument ? workingDocument.importedPdf.name : "No document loaded"}</span>
             {workingDocument ? <span className="topbar__meta">{workingDocument.importedPdf.pageMappings.length} pages</span> : null}
@@ -1044,8 +1048,8 @@ export default function App({
                   <p className="canvas-helper">{canvasHelperMessage}</p>
                 </div>
                 <div className="canvas-header__meta">
-                  <span>{activePageFields.length} field(s) on this page</span>
-                  <span>{loadedWorkingDocument.fields.length} total field(s)</span>
+                  <span className="canvas-pill">{activePageFields.length} field(s) on this page</span>
+                  <span className="canvas-pill">{loadedWorkingDocument.fields.length} total field(s)</span>
                   {placementLabel ? <span className="canvas-status">{placementLabel}</span> : null}
                   {pendingFieldType ? (
                     <button type="button" className="button button--chip" onClick={clearPendingPlacement}>
@@ -1406,7 +1410,10 @@ export default function App({
                     )}
                   </div>
                 ) : (
-                  <p className="helper-copy">Select a field on the document to edit its settings.</p>
+                  <div className="inspector-empty">
+                    <p>Select a field on the PDF to edit its settings.</p>
+                    <span>You can move, resize, duplicate or delete fields after selecting them.</span>
+                  </div>
                 )}
               </section>
             </aside>

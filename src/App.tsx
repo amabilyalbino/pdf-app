@@ -812,7 +812,23 @@ export default function App({
       <header className="topbar">
         <div className="topbar__brand">
           <span className="topbar__mark" aria-hidden="true">
-            <span className="topbar__mark-core" />
+            <svg viewBox="0 0 40 40" role="presentation" focusable="false">
+              <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="13" className="topbar__mark-shell" />
+              <path
+                className="topbar__mark-blob"
+                d="M9.6 20.7c0-6.5 4.4-11.3 10.4-11.3 2.8 0 5.3.8 7.1 2.5 2.2 2 3.5 5.1 3.5 8.8 0 6.2-4 10.6-9.7 10.6h-3.4c-4.8 0-7.9-4.1-7.9-10.6Z"
+              />
+              <path
+                className="topbar__mark-blob-shadow"
+                d="M23.8 11.2c3.6 1.5 5.9 5 5.9 9.4 0 5.9-3.8 10.1-9.3 10.1h2c5.5 0 9.3-4.2 9.3-10.1 0-4.3-2-7.8-5.1-9.4h-2.8Z"
+              />
+              <path className="topbar__mark-doc" d="M24.6 10.6h5.2v6.1l-1.8-1.2-1.7 1.2-1.7-1.2-1.7 1.2Z" />
+              <circle cx="17" cy="19.2" r="1.2" className="topbar__mark-face" />
+              <circle cx="22.3" cy="19.2" r="1.2" className="topbar__mark-face" />
+              <path className="topbar__mark-face" d="M16.3 23.1c1 .9 2.2 1.3 3.4 1.3 1.2 0 2.4-.4 3.4-1.3" />
+              <path className="topbar__mark-cheek" d="M13.7 22.2c.8.5 1.2.8 1.8.8.5 0 .9-.1 1.5-.5" />
+              <path className="topbar__mark-cheek" d="M22.7 22.5c.6.3 1 .5 1.5.5.6 0 1-.3 1.8-.8" />
+            </svg>
           </span>
           <strong>Ops PDF Studio</strong>
           <span className="topbar__divider" aria-hidden="true" />

@@ -291,13 +291,17 @@ button {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 4px;
-  padding-bottom: 12px;
+  padding-bottom: 20px;
   overscroll-behavior: contain;
+}
+
+.sidebar--left {
+  padding-bottom: 28px;
 }
 
 .panel {
@@ -313,12 +317,21 @@ button {
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.05);
 }
 
+.sidebar--left .panel {
+  padding: 10px;
+  border-radius: 13px;
+}
+
+.sidebar--right .panel {
+  padding: 14px;
+}
+
 .panel__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .panel__header h2 {
@@ -333,7 +346,7 @@ button {
 .panel__row-actions {
   display: flex;
   justify-content: flex-start;
-  margin: 10px 0 0;
+  margin: 4px 0 0;
 }
 
 .button {
@@ -368,12 +381,12 @@ button {
 }
 
 .button--chip {
-  min-height: 32px;
-  padding: 0 11px;
+  min-height: 30px;
+  padding: 0 10px;
   border-color: var(--line-strong);
   background: var(--surface-strong);
   color: var(--ink);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
 }
 
 .button--chip:hover {
@@ -397,10 +410,18 @@ button {
 }
 
 .signature-creator {
-  padding: 12px;
+  padding: 10px;
   border-radius: 12px;
   border: 1px solid var(--line);
   background: #fafaf7;
+  max-height: 360px;
+  overflow-y: auto;
+}
+
+.signature-creator .button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.84rem;
 }
 
 .meta-card--minimal {
@@ -463,6 +484,10 @@ button {
   color: var(--muted);
   font-size: 0.8rem;
   line-height: 1.4;
+}
+
+.sidebar--left .meta-card {
+  padding: 9px 10px;
 }
 
 .guide-step {
@@ -528,28 +553,49 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px;
+  min-height: 50px;
+  padding: 0 12px;
   cursor: pointer;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   line-height: 1;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
-  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-weight: 600;
 }
 
 .panel__summary::-webkit-details-marker {
   display: none;
 }
 
-.panel__summary span:last-child {
+.panel__summary-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 16, 16, 0.08);
   color: var(--muted-soft);
-  font-size: 0.72rem;
+  font-size: 0.88rem;
+  line-height: 1;
 }
 
 .panel__collapsible-body {
-  padding: 0 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: min(320px, 38vh);
+  overflow-y: auto;
+  padding: 10px 12px 12px;
   border-top: 1px solid rgba(16, 16, 16, 0.05);
+}
+
+.accordion-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 .auth-shell {
@@ -1184,7 +1230,7 @@ button {
 }
 
 .field-type-card {
-  min-height: 66px;
+  min-height: 58px;
   justify-content: space-between;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
@@ -1196,15 +1242,15 @@ button {
 }
 
 .field-type-card__icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 999px;
   background: #f4f6f8;
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
   line-height: 1;
 }
@@ -1230,35 +1276,35 @@ button {
 }
 
 .field-type-card strong {
-  font-size: 0.88rem;
+  font-size: 0.84rem;
 }
 
 .field-type-card span {
   letter-spacing: 0;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   line-height: 1.25;
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .form-field span {
   color: var(--muted-soft);
-  font-size: 0.78rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .form-field input,
 .form-field select,
 select {
-  min-height: 46px;
+  min-height: 42px;
   padding: 0 12px;
   border: 1px solid var(--line-strong);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface-strong);
   color: var(--ink);
 }
@@ -1297,8 +1343,8 @@ select {
 .upload-box {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 10px;
   border: 1px dashed var(--line-strong);
   border-radius: 12px;
   background: var(--surface-strong);
@@ -1307,7 +1353,7 @@ select {
 .upload-box img,
 .signature-card img {
   width: 100%;
-  max-height: 86px;
+  max-height: 54px;
   object-fit: contain;
 }
 
@@ -1315,12 +1361,21 @@ select {
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .signature-card {
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
   width: 100%;
   cursor: pointer;
+  padding: 8px 10px;
+  border-color: rgba(16, 16, 16, 0.08);
+  background: #ffffff;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;
 }
 
@@ -1331,31 +1386,82 @@ select {
 
 .signature-card.is-selected {
   border-color: #111111;
-  background: #f0f0eb;
+  background: #f7f7f2;
 }
 
 .signature-card__meta {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
+}
+
+.signature-card__meta strong,
+.signature-card__meta span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .context-banner {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--line-strong);
-  background: #ffffff;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(16, 16, 16, 0.08);
+  background: #fafaf7;
 }
 
 .context-banner span {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.84rem;
   line-height: 1.4;
+}
+
+.inspector-chip {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(16, 16, 16, 0.08);
+  background: #f7f7f2;
+  color: var(--ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.inspector-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.sidebar--right .inspector-section + .inspector-section {
+  padding-top: 12px;
+  border-top: 1px solid rgba(16, 16, 16, 0.06);
+}
+
+.sidebar--right .inline-grid {
+  gap: 10px;
+}
+
+.sidebar--right .inline-grid .button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 0.84rem;
+}
+
+.sidebar--right .toggle-row {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface-strong);
 }
 
 .button--danger {
@@ -1469,6 +1575,7 @@ select {
 
 .signature-pad canvas {
   width: 100%;
+  min-height: 140px;
   border-radius: var(--radius-md);
   border: 1px solid var(--line-strong);
   background: white;

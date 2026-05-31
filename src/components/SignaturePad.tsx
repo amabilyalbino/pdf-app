@@ -111,7 +111,7 @@ export function SignaturePad({ initialDataUrl, onChange }: SignaturePadProps) {
       <canvas
         ref={canvasRef}
         width={640}
-        height={220}
+        height={170}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={stopDrawing}

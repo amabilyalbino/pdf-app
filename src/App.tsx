@@ -991,8 +991,8 @@ export default function App({
                 </div>
                 <p className="helper-copy">
                   {sessionOnlySignatures
-                    ? "Signatures are saved for this session only."
-                    : "Save signatures once, then place them on the document."}
+                    ? "Saved for this session only."
+                    : "Saved signatures are ready to use."}
                 </p>
                 {showSignatureCreator ? (
                   <div className="stack signature-creator">
@@ -1083,17 +1083,16 @@ export default function App({
               >
                 <summary className="panel__summary">
                   <span>Reusable data</span>
-                  <span>{isProfilesOpen ? "Hide" : "Show"}</span>
+                  <span className="panel__summary-indicator" aria-hidden="true">{isProfilesOpen ? "−" : "+"}</span>
                 </summary>
                 <div className="panel__collapsible-body">
-                  <div className="panel__header">
-                    <h2>Reusable data</h2>
-                    <button type="button" className="button button--chip" onClick={createFillProfile}>
-                      New profile
-                    </button>
-                  </div>
                   {store.fillProfiles.length > 0 ? (
                     <div className="stack compact">
+                      <div className="panel__row-actions">
+                        <button type="button" className="button button--chip" onClick={createFillProfile}>
+                          New profile
+                        </button>
+                      </div>
                       <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
                         {store.fillProfiles.map((profile) => (
                           <option key={profile.id} value={profile.id}>
@@ -1119,7 +1118,12 @@ export default function App({
                       ) : null}
                     </div>
                   ) : (
-                    <p className="helper-copy">Save recurring data once and reuse it later.</p>
+                    <div className="accordion-empty">
+                      <p className="helper-copy">No reusable data yet.</p>
+                      <button type="button" className="button button--chip" onClick={createFillProfile}>
+                        New profile
+                      </button>
+                    </div>
                   )}
                 </div>
               </details>
@@ -1131,12 +1135,9 @@ export default function App({
               >
                 <summary className="panel__summary">
                   <span>Templates</span>
-                  <span>{isTemplatesOpen ? "Hide" : "Show"}</span>
+                  <span className="panel__summary-indicator" aria-hidden="true">{isTemplatesOpen ? "−" : "+"}</span>
                 </summary>
                 <div className="panel__collapsible-body">
-                  <div className="panel__header">
-                    <h2>Templates</h2>
-                  </div>
                   {suggestions.length > 0 ? (
                     <div className="stack compact">
                       {suggestions.slice(0, 3).map((suggestion) => (
@@ -1161,7 +1162,7 @@ export default function App({
                       ))}
                     </div>
                   ) : (
-                    <p className="helper-copy">Saved templates will appear here.</p>
+                    <p className="helper-copy">No saved templates yet.</p>
                   )}
                 </div>
               </details>
@@ -1273,9 +1274,18 @@ export default function App({
                     {selectedField.type === "signature" ? (
                       <div className="stack compact">
                         <div className="inspector-section">
-                          <h3 className="inspector-section__title">Signature</h3>
+                          <h3 className="inspector-section__title">Selected field</h3>
+                          <div className="inspector-chip">Signature</div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Status</h3>
+                          <p className="inspector-copy">
+                            {selectedField.signatureProfileId ? "Signature applied" : "Needs a signature"}
+                          </p>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Instruction</h3>
                           <div className="context-banner">
-                            <strong>{selectedField.signatureProfileId ? "Signature applied" : "Needs a signature"}</strong>
                             <span>
                               {selectedField.signatureProfileId
                                 ? "Use the signatures panel to replace or remove it."
@@ -1340,7 +1350,11 @@ export default function App({
                     ) : selectedField.type === "checkbox" ? (
                       <div className="stack compact">
                         <div className="inspector-section">
-                          <h3 className="inspector-section__title">Checkbox</h3>
+                          <h3 className="inspector-section__title">Selected field</h3>
+                          <div className="inspector-chip">Checkbox</div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Value</h3>
                           <label className="toggle-row">
                             <input
                               type="checkbox"
@@ -1407,9 +1421,11 @@ export default function App({
                     ) : (
                       <div className="stack compact">
                         <div className="inspector-section">
-                          <h3 className="inspector-section__title">
-                            {selectedField.type === "date" ? "Date" : "Text"}
-                          </h3>
+                          <h3 className="inspector-section__title">Selected field</h3>
+                          <div className="inspector-chip">{selectedField.type === "date" ? "Date" : "Text"}</div>
+                        </div>
+                        <div className="inspector-section">
+                          <h3 className="inspector-section__title">Content</h3>
                           <label className="form-field">
                             <span>Value</span>
                             <input

@@ -3,7 +3,6 @@ import { FieldOverlay } from "./components/FieldOverlay";
 import { PdfPageCanvas } from "./components/PdfPageCanvas";
 import { SignaturePad } from "./components/SignaturePad";
 import {
-  applyFillProfileValue,
   cloneField,
   createField,
   fieldToTemplateDefinition,
@@ -24,7 +23,6 @@ import { buildExportHistoryEntry, matchTemplates } from "./lib/templates";
 import type {
   AppStore,
   FieldType,
-  FillProfile,
   PlacedField,
   SignatureDraft,
   SignatureProfile,
@@ -78,7 +76,7 @@ type AppProps = {
   onSignOut?: () => Promise<void>;
 };
 
-type WorkspacePanel = "insert" | "signatures" | "profiles" | "templates";
+type WorkspacePanel = "insert" | "signatures" | "templates";
 
 export default function App({
   authProtected = false,
@@ -94,9 +92,7 @@ export default function App({
   const [notice, setNotice] = useState<Notice | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const [signatureAssetCache, setSignatureAssetCache] = useState<Record<string, string>>({});
-  const [selectedFillProfileId, setSelectedFillProfileId] = useState<string | null>(null);
   const [workspacePanel, setWorkspacePanel] = useState<WorkspacePanel>("insert");
-  const [isProfilesOpen, setIsProfilesOpen] = useState(false);
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [pendingFieldType, setPendingFieldType] = useState<FieldType | null>(null);
   const [pendingSignatureProfileId, setPendingSignatureProfileId] = useState<string | null>(null);
@@ -104,7 +100,8 @@ export default function App({
   const [isDragActive, setIsDragActive] = useState(false);
   const [signatureDraft, setSignatureDraft] = useState<SignatureDraft>({
     sourceType: "upload",
-    dataUrl: ""
+    dataUrl: "",
+    fileName: ""
   });
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const pageStageRef = useRef<HTMLDivElement | null>(null);
@@ -122,7 +119,6 @@ export default function App({
 
       setStore(nextStore);
       setSignatureAssetCache(nextStore.signatureAssets ?? {});
-      setSelectedFillProfileId(nextStore.fillProfiles[0]?.id ?? null);
       setLoaded(true);
     }
 
@@ -230,28 +226,6 @@ export default function App({
     () => workingDocument?.fields.find((field) => field.id === selectedFieldId) ?? null,
     [selectedFieldId, workingDocument]
   );
-
-  const selectedFillProfile = useMemo(
-    () => store.fillProfiles.find((profile) => profile.id === selectedFillProfileId) ?? null,
-    [selectedFillProfileId, store.fillProfiles]
-  );
-
-  const selectedFillProfileKeys = useMemo(() => {
-    if (!selectedFillProfile) {
-      return [];
-    }
-
-    return Array.from(
-      new Set(
-        [
-          ...Object.keys(selectedFillProfile.values),
-          ...(workingDocument?.fields
-            .map((field) => field.bindingKey)
-            .filter((value): value is string => Boolean(value)) ?? [])
-        ].sort()
-      )
-    );
-  }, [selectedFillProfile, workingDocument]);
 
   const activePageFields = useMemo(
     () => workingDocument?.fields.filter((field) => field.page === workingDocument.activePage) ?? [],
@@ -592,9 +566,6 @@ export default function App({
       };
     });
     setSelectedFieldId(hydratedFields[0]?.id ?? null);
-    setWorkspacePanel("templates");
-    setIsTemplatesOpen(true);
-
     flash({
       tone: "success",
       message: `Template "${template.name}" applied.`
@@ -610,15 +581,11 @@ export default function App({
       return;
     }
 
-    const name = window.prompt("Template name", workingDocument.importedPdf.name.replace(/\.pdf$/i, ""));
-    if (!name) {
-      return;
-    }
-
     const now = new Date().toISOString();
     const existing = workingDocument.appliedTemplateId
       ? store.templates.find((item) => item.id === workingDocument.appliedTemplateId)
       : null;
+    const name = (existing?.name ?? workingDocument.importedPdf.name.replace(/\.pdf$/i, "")).trim() || `Template ${store.templates.length + 1}`;
 
     const template: TemplateDefinition = {
       id: existing?.id ?? createId("template"),
@@ -640,76 +607,9 @@ export default function App({
       ...workingDocument,
       appliedTemplateId: template.id
     });
-    setWorkspacePanel("templates");
-    setIsTemplatesOpen(true);
-
     flash({
       tone: "success",
       message: `Template "${name}" saved successfully.`
-    });
-  }
-
-  function createFillProfile() {
-    const name = window.prompt("Fill profile name", "Default profile");
-    if (!name) {
-      return;
-    }
-
-    const seedEntries =
-      workingDocument?.fields
-        .filter((field) => field.bindingKey)
-        .map((field) => [field.bindingKey as string, field.value ?? ""]) ?? [];
-
-    const now = new Date().toISOString();
-    const profile: FillProfile = {
-      id: createId("fill_profile"),
-      name,
-      values: Object.fromEntries(seedEntries),
-      createdAt: now,
-      updatedAt: now
-    };
-
-    setStore({
-      ...store,
-      fillProfiles: [profile, ...store.fillProfiles]
-    });
-    setSelectedFillProfileId(profile.id);
-    setWorkspacePanel("profiles");
-    setIsProfilesOpen(true);
-  }
-
-  function updateFillProfileValue(profileId: string, key: string, value: string) {
-    setStore({
-      ...store,
-      fillProfiles: store.fillProfiles.map((profile) =>
-        profile.id === profileId
-          ? {
-              ...profile,
-              values: {
-                ...profile.values,
-                [key]: value
-              },
-              updatedAt: new Date().toISOString()
-            }
-          : profile
-      )
-    });
-  }
-
-  function applySelectedFillProfile() {
-    if (!workingDocument || !selectedFillProfile) {
-      return;
-    }
-
-    const nextFields = workingDocument.fields.map((field) => applyFillProfileValue(field, selectedFillProfile.values));
-    setWorkingDocument({
-      ...workingDocument,
-      fields: nextFields
-    });
-
-    flash({
-      tone: "success",
-      message: `Profile "${selectedFillProfile.name}" applied to linked fields.`
     });
   }
 
@@ -784,7 +684,8 @@ export default function App({
     }));
     setSignatureDraft({
       sourceType: "upload",
-      dataUrl: ""
+      dataUrl: "",
+      fileName: ""
     });
     setShowSignatureCreator(false);
     setWorkspacePanel("signatures");
@@ -852,7 +753,7 @@ export default function App({
         pageMappings: workingDocument.importedPdf.pageMappings,
         signatureProfiles: store.signatureProfiles,
         signatureAssets: signatureAssetCache,
-        fillProfiles: selectedFillProfile ? [selectedFillProfile] : []
+        fillProfiles: []
       });
 
       const outputName = workingDocument.importedPdf.name.replace(/\.pdf$/i, "") + "-filled.pdf";
@@ -999,6 +900,9 @@ export default function App({
                 </p>
                 {showSignatureCreator ? (
                   <div className="stack signature-creator">
+                    <div className="signature-creator__header">
+                      <h3>Add signature</h3>
+                    </div>
                     <div className="segmented">
                       <button
                         type="button"
@@ -1017,8 +921,13 @@ export default function App({
                     </div>
                     {signatureDraft.sourceType === "upload" ? (
                       <label className="upload-box">
-                        <span>Upload PNG or JPG</span>
+                        <span className="upload-box__title">Upload PNG or JPG</span>
+                        <div className="upload-box__row">
+                          <span className="upload-box__button">Choose file</span>
+                          <span className="upload-box__filename">{signatureDraft.fileName || "No file selected"}</span>
+                        </div>
                         <input
+                          className="upload-box__input"
                           type="file"
                           accept="image/png,image/jpeg"
                           onChange={async (event) => {
@@ -1031,7 +940,8 @@ export default function App({
                             reader.onload = () => {
                               setSignatureDraft((current) => ({
                                 ...current,
-                                dataUrl: String(reader.result ?? "")
+                                dataUrl: String(reader.result ?? ""),
+                                fileName: file.name
                               }));
                             };
                             reader.readAsDataURL(file);
@@ -1052,7 +962,7 @@ export default function App({
                     </div>
                   </div>
                 ) : null}
-                <div className="signature-library">
+                <div className={`signature-library ${showSignatureCreator ? "signature-library--compact" : ""}`}>
                   {store.signatureProfiles.map((profile) => (
                     <button
                       key={profile.id}
@@ -1082,58 +992,6 @@ export default function App({
                   {store.signatureProfiles.length === 0 ? <p className="helper-copy">No saved signatures yet.</p> : null}
                 </div>
               </section>
-
-              <details
-                className={`panel panel--collapsible ${workspacePanel === "profiles" ? "panel--focus" : ""}`}
-                open={isProfilesOpen}
-                onToggle={(event) => setIsProfilesOpen((event.currentTarget as HTMLDetailsElement).open)}
-              >
-                <summary className="panel__summary">
-                  <span>Reusable data</span>
-                  <span className="panel__summary-indicator">{isProfilesOpen ? "Hide" : "Show"}</span>
-                </summary>
-                <div className="panel__collapsible-body">
-                  {store.fillProfiles.length > 0 ? (
-                    <div className="stack compact">
-                      <div className="panel__row-actions">
-                        <button type="button" className="button button--chip" onClick={createFillProfile}>
-                          New profile
-                        </button>
-                      </div>
-                      <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
-                        {store.fillProfiles.map((profile) => (
-                          <option key={profile.id} value={profile.id}>
-                            {profile.name}
-                          </option>
-                        ))}
-                      </select>
-                      {selectedFillProfile ? (
-                        <>
-                          {selectedFillProfileKeys.map((key) => (
-                            <label key={key} className="form-field">
-                              <span>{key}</span>
-                              <input
-                                value={selectedFillProfile.values[key] ?? ""}
-                                onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
-                              />
-                            </label>
-                          ))}
-                          <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
-                            Apply profile
-                          </button>
-                        </>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="accordion-empty">
-                      <p className="helper-copy">No reusable data yet.</p>
-                      <button type="button" className="button button--chip" onClick={createFillProfile}>
-                        New profile
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </details>
 
               <details
                 className={`panel panel--collapsible ${workspacePanel === "templates" ? "panel--focus" : ""}`}
@@ -1250,7 +1108,7 @@ export default function App({
                                   selected={selectedFieldId === field.id}
                                   signatureProfiles={store.signatureProfiles}
                                   signatureAssets={signatureAssetCache}
-                                  fillProfiles={selectedFillProfile ? [selectedFillProfile] : []}
+                                  fillProfiles={[]}
                                   onSelect={() => {
                                     setSelectedFieldId(field.id);
                                     setActivePage(field.page);

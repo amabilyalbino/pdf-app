@@ -119,4 +119,5 @@ export type ExportJob = {
 export type SignatureDraft = {
   sourceType: SignatureSourceType;
   dataUrl: string;
+  fileName?: string;
 };

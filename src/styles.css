@@ -233,38 +233,29 @@ button {
 }
 
 .topbar__mark-shell {
-  fill: rgba(255, 255, 255, 0.78);
+  fill: rgba(247, 248, 246, 0.88);
   stroke: rgba(0, 0, 0, 0.06);
-  stroke-width: 1.5;
+  stroke-width: 1.2;
 }
 
 .topbar__mark-blob {
   fill: #b8e3c8;
 }
 
-.topbar__mark-blob-shadow {
-  fill: rgba(111, 182, 145, 0.22);
+.topbar__mark-eye {
+  fill: #28322c;
 }
 
-.topbar__mark-doc {
-  fill: rgba(255, 255, 255, 0.98);
-  stroke: rgba(29, 29, 31, 0.08);
-  stroke-width: 0.8;
-}
-
-.topbar__mark-face {
+.topbar__mark-smile {
   fill: none;
   stroke: #28322c;
-  stroke-width: 1.6;
+  stroke-width: 1.45;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.topbar__mark-cheek {
-  fill: none;
-  stroke: rgba(242, 154, 194, 0.42);
-  stroke-width: 1.2;
-  stroke-linecap: round;
+.topbar__mark-blush {
+  fill: rgba(242, 154, 194, 0.38);
 }
 
 .topbar__divider {

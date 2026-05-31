@@ -1041,7 +1041,10 @@ export default function App({
                 <div className="stack compact">
                   <div className="meta-card meta-card--minimal meta-card--document">
                     <span className="meta-card__icon" aria-hidden="true">
-                      📄
+                      <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+                        <path d="M7.5 3.75h6.2l3.8 3.8v11.2a1.5 1.5 0 0 1-1.5 1.5h-8.5A1.5 1.5 0 0 1 6 18.75v-13.5a1.5 1.5 0 0 1 1.5-1.5Z" />
+                        <path d="M13.5 3.75v4.25h4.25" />
+                      </svg>
                     </span>
                     <div className="meta-card__content">
                       <strong>{loadedWorkingDocument.importedPdf.name}</strong>
@@ -1053,7 +1056,7 @@ export default function App({
 
               <section className={`panel ${workspacePanel === "insert" ? "panel--focus" : ""}`}>
                 <div className="panel__header">
-                  <h2>Add to PDF</h2>
+                  <h2>Add fields</h2>
                 </div>
                 <div className="field-grid">
                   {FIELD_TYPES.map((item) => (
@@ -1402,9 +1405,12 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Status</h3>
-                          <p className="inspector-copy">
-                            {selectedField.signatureProfileId ? "Signature applied" : "Needs a signature"}
-                          </p>
+                          <div className="inspector-kv">
+                            <span className="inspector-kv__label">Signature</span>
+                            <span className="inspector-kv__value">
+                              {selectedField.signatureProfileId ? "Signature applied" : "Needs a signature"}
+                            </span>
+                          </div>
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Instruction</h3>
@@ -1422,9 +1428,9 @@ export default function App({
                           </div>
                         </div>
                         <div className="inspector-section">
-                          <h3 className="inspector-section__title">Size</h3>
-                          <div className="inline-grid">
-                            <label className="form-field">
+                          <h3 className="inspector-section__title">Size &amp; position</h3>
+                          <div className="inspector-grid">
+                            <label className="form-field form-field--stacked">
                               <span>Width</span>
                               <input
                                 type="number"
@@ -1440,7 +1446,7 @@ export default function App({
                                 }
                               />
                             </label>
-                            <label className="form-field">
+                            <label className="form-field form-field--stacked">
                               <span>Height</span>
                               <input
                                 type="number"
@@ -1460,7 +1466,7 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Actions</h3>
-                          <div className="inline-grid">
+                          <div className="inspector-actions">
                             <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
                               Duplicate field
                             </button>
@@ -1478,24 +1484,29 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Value</h3>
-                          <label className="toggle-row">
-                            <input
-                              type="checkbox"
-                              checked={Boolean(selectedField.checked)}
-                              onChange={(event) =>
-                                updateField({
-                                  ...selectedField,
-                                  checked: event.target.checked
-                                })
-                              }
-                            />
+                          <div className="inspector-switch-row">
                             <span>Checked</span>
-                          </label>
+                            <label className="switch">
+                              <input
+                                type="checkbox"
+                                checked={Boolean(selectedField.checked)}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    checked: event.target.checked
+                                  })
+                                }
+                              />
+                              <span className="switch__track" aria-hidden="true">
+                                <span className="switch__thumb" />
+                              </span>
+                            </label>
+                          </div>
                         </div>
                         <div className="inspector-section">
-                          <h3 className="inspector-section__title">Size</h3>
-                          <div className="inline-grid">
-                            <label className="form-field">
+                          <h3 className="inspector-section__title">Size &amp; position</h3>
+                          <div className="inspector-grid">
+                            <label className="form-field form-field--stacked">
                               <span>Width</span>
                               <input
                                 type="number"
@@ -1511,7 +1522,7 @@ export default function App({
                                 }
                               />
                             </label>
-                            <label className="form-field">
+                            <label className="form-field form-field--stacked">
                               <span>Height</span>
                               <input
                                 type="number"
@@ -1531,7 +1542,7 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Actions</h3>
-                          <div className="inline-grid">
+                          <div className="inspector-actions">
                             <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
                               Duplicate field
                             </button>
@@ -1549,7 +1560,7 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Content</h3>
-                          <label className="form-field">
+                          <label className="form-field form-field--stacked">
                             <span>Value</span>
                             <input
                               value={selectedField.value ?? ""}
@@ -1559,8 +1570,8 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Appearance</h3>
-                          <div className="inline-grid">
-                            <label className="form-field">
+                          <div className="inspector-grid">
+                            <label className="form-field form-field--stacked">
                               <span>Font size</span>
                               <input
                                 type="number"
@@ -1578,7 +1589,7 @@ export default function App({
                                 }
                               />
                             </label>
-                            <label className="form-field">
+                            <label className="form-field form-field--stacked">
                               <span>Text colour</span>
                               <input
                                 type="color"
@@ -1595,27 +1606,32 @@ export default function App({
                               />
                             </label>
                           </div>
-                          <label className="toggle-row">
-                            <input
-                              type="checkbox"
-                              checked={selectedField.style.bold}
-                              onChange={(event) =>
-                                updateField({
-                                  ...selectedField,
-                                  style: {
-                                    ...selectedField.style,
-                                    bold: event.target.checked
-                                  }
-                                })
-                              }
-                            />
+                          <div className="inspector-switch-row">
                             <span>Bold</span>
-                          </label>
+                            <label className="switch">
+                              <input
+                                type="checkbox"
+                                checked={selectedField.style.bold}
+                                onChange={(event) =>
+                                  updateField({
+                                    ...selectedField,
+                                    style: {
+                                      ...selectedField.style,
+                                      bold: event.target.checked
+                                    }
+                                  })
+                                }
+                              />
+                              <span className="switch__track" aria-hidden="true">
+                                <span className="switch__thumb" />
+                              </span>
+                            </label>
+                          </div>
                         </div>
                         <div className="inspector-section">
-                          <h3 className="inspector-section__title">Size</h3>
-                          <div className="inline-grid">
-                            <label className="form-field">
+                          <h3 className="inspector-section__title">Size &amp; position</h3>
+                          <div className="inspector-grid">
+                            <label className="form-field form-field--stacked">
                               <span>Width</span>
                               <input
                                 type="number"
@@ -1631,7 +1647,7 @@ export default function App({
                                 }
                               />
                             </label>
-                            <label className="form-field">
+                            <label className="form-field form-field--stacked">
                               <span>Height</span>
                               <input
                                 type="number"
@@ -1651,7 +1667,7 @@ export default function App({
                         </div>
                         <div className="inspector-section">
                           <h3 className="inspector-section__title">Actions</h3>
-                          <div className="inline-grid">
+                          <div className="inspector-actions">
                             <button type="button" className="button button--ghost" onClick={() => duplicateField(selectedField.id)}>
                               Duplicate field
                             </button>

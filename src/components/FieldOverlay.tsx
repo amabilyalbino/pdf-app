@@ -267,7 +267,16 @@ export function FieldOverlay({
                 onDuplicate();
               }}
             >
-              ⧉
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path
+                  d="M5 4.5h6.5v6.5H5zM2.5 7V2.5H9"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </button>
             <button
               type="button"
@@ -279,7 +288,15 @@ export function FieldOverlay({
                 onDelete();
               }}
             >
-              ✕
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <path
+                  d="M4.5 4.5l7 7m0-7l-7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </svg>
             </button>
           </div>
           <button

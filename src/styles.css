@@ -291,18 +291,18 @@ button {
 .sidebar {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 6px;
-  padding-bottom: 18px;
+  padding-right: 4px;
+  padding-bottom: 12px;
   overscroll-behavior: contain;
 }
 
 .panel {
-  padding: 16px;
-  border-radius: 18px;
+  padding: 12px;
+  border-radius: 14px;
   background: #ffffff;
   border: 1px solid var(--line);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.03);
@@ -317,13 +317,13 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .panel__header h2 {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.74rem;
   line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -333,7 +333,7 @@ button {
 .panel__row-actions {
   display: flex;
   justify-content: flex-start;
-  margin: 12px 0;
+  margin: 10px 0 0;
 }
 
 .button {
@@ -368,12 +368,12 @@ button {
 }
 
 .button--chip {
-  min-height: 38px;
-  padding: 0 14px;
+  min-height: 32px;
+  padding: 0 11px;
   border-color: var(--line-strong);
   background: var(--surface-strong);
   color: var(--ink);
-  font-size: 0.84rem;
+  font-size: 0.76rem;
 }
 
 .button--chip:hover {
@@ -389,16 +389,16 @@ button {
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.stack.compact {
   gap: 10px;
 }
 
+.stack.compact {
+  gap: 8px;
+}
+
 .signature-creator {
-  padding: 14px;
-  border-radius: var(--radius-md);
+  padding: 12px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: #fafaf7;
 }
@@ -434,9 +434,9 @@ button {
 .field-type-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 14px;
-  border-radius: var(--radius-md);
+  gap: 4px;
+  padding: 10px 11px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: var(--surface-strong);
   color: inherit;
@@ -449,7 +449,7 @@ button {
 .history-card strong,
 .template-card strong,
 .field-type-card strong {
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
@@ -461,16 +461,16 @@ button {
 .template-card span,
 .field-type-card span {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   line-height: 1.4;
 }
 
 .guide-step {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 14px;
-  border-radius: var(--radius-md);
+  gap: 3px;
+  padding: 12px 13px;
+  border-radius: 12px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.82);
   position: relative;
@@ -486,15 +486,15 @@ button {
 }
 
 .guide-step strong {
-  font-size: 0.94rem;
+  font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .guide-step span {
   color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .guide-step.is-complete::before {
@@ -515,6 +515,41 @@ button {
 
 .guide-step.is-blocked {
   background: rgba(179, 75, 66, 0.04);
+}
+
+.panel--collapsible {
+  padding: 0;
+  overflow: hidden;
+}
+
+.panel__summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  font-weight: 700;
+}
+
+.panel__summary::-webkit-details-marker {
+  display: none;
+}
+
+.panel__summary span:last-child {
+  color: var(--muted-soft);
+  font-size: 0.72rem;
+}
+
+.panel__collapsible-body {
+  padding: 0 12px 12px;
+  border-top: 1px solid rgba(16, 16, 16, 0.05);
 }
 
 .auth-shell {
@@ -786,7 +821,7 @@ button {
   margin: 0;
   max-width: 420px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.45;
 }
 
@@ -850,13 +885,13 @@ button {
 }
 
 .segmented button {
-  min-height: 34px;
-  padding: 0 12px;
+  min-height: 30px;
+  padding: 0 10px;
   border-radius: 999px;
   border: 1px solid var(--line-strong);
   background: #ffffff;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.76rem;
 }
 
 .segmented button.is-active {
@@ -888,25 +923,24 @@ button {
   align-self: center;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-width: 520px;
-  padding: 14px 16px;
-  border-radius: 18px;
+  gap: 2px;
+  max-width: 460px;
+  padding: 10px 12px;
+  border-radius: 12px;
   border: 1px solid rgba(16, 16, 16, 0.07);
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.04);
+  background: rgba(255, 255, 255, 0.68);
   text-align: center;
 }
 
 .canvas-empty-hint strong {
-  font-size: 0.94rem;
+  font-size: 0.86rem;
   letter-spacing: -0.02em;
 }
 
 .canvas-empty-hint span {
   color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .page-card {
@@ -1093,13 +1127,33 @@ button {
 .field-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .field-type-card {
-  min-height: 84px;
+  min-height: 66px;
   justify-content: space-between;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.field-type-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-type-card__icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #f4f6f8;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .field-type-card:hover {
@@ -1117,14 +1171,19 @@ button {
   color: rgba(255, 255, 255, 0.72);
 }
 
+.field-type-card.is-active .field-type-card__icon {
+  background: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.86);
+}
+
 .field-type-card strong {
-  font-size: 1rem;
+  font-size: 0.88rem;
 }
 
 .field-type-card span {
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  font-size: 0.66rem;
 }
 
 .form-field {
@@ -1167,28 +1226,28 @@ select {
 .upload-box {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 12px;
   border: 1px dashed var(--line-strong);
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   background: var(--surface-strong);
 }
 
 .upload-box img,
 .signature-card img {
   width: 100%;
-  max-height: 110px;
+  max-height: 86px;
   object-fit: contain;
 }
 
 .signature-library {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
+  gap: 8px;
 }
 
 .signature-card {
-  gap: 12px;
+  gap: 8px;
   width: 100%;
   cursor: pointer;
   transition: border-color 140ms ease, background 140ms ease, transform 140ms ease;

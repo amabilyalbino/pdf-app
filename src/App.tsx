@@ -57,6 +57,13 @@ const FIELD_TYPE_LABELS: Record<FieldType, string> = {
   signature: "signature"
 };
 
+const FIELD_TYPE_ICONS: Record<FieldType, string> = {
+  text: "Aa",
+  date: "31",
+  checkbox: "☑",
+  signature: "✦"
+};
+
 type AppProps = {
   authEmail?: string | null;
   authProtected?: boolean;
@@ -82,6 +89,8 @@ export default function App({
   const [signatureAssetCache, setSignatureAssetCache] = useState<Record<string, string>>({});
   const [selectedFillProfileId, setSelectedFillProfileId] = useState<string | null>(null);
   const [workspacePanel, setWorkspacePanel] = useState<WorkspacePanel>("insert");
+  const [isProfilesOpen, setIsProfilesOpen] = useState(false);
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false);
   const [pendingFieldType, setPendingFieldType] = useState<FieldType | null>(null);
   const [pendingSignatureProfileId, setPendingSignatureProfileId] = useState<string | null>(null);
   const [showSignatureCreator, setShowSignatureCreator] = useState(false);
@@ -569,6 +578,7 @@ export default function App({
     });
     setSelectedFieldId(hydratedFields[0]?.id ?? null);
     setWorkspacePanel("templates");
+    setIsTemplatesOpen(true);
 
     flash({
       tone: "success",
@@ -616,6 +626,7 @@ export default function App({
       appliedTemplateId: template.id
     });
     setWorkspacePanel("templates");
+    setIsTemplatesOpen(true);
 
     flash({
       tone: "success",
@@ -649,6 +660,7 @@ export default function App({
     });
     setSelectedFillProfileId(profile.id);
     setWorkspacePanel("profiles");
+    setIsProfilesOpen(true);
   }
 
   function updateFillProfileValue(profileId: string, key: string, value: string) {
@@ -957,7 +969,12 @@ export default function App({
                       className={`field-type-card ${pendingFieldType === item.type ? "is-active" : ""}`}
                       onClick={() => beginFieldPlacement(item.type)}
                     >
-                      <strong>{item.label}</strong>
+                      <div className="field-type-card__header">
+                        <span className="field-type-card__icon" aria-hidden="true">
+                          {FIELD_TYPE_ICONS[item.type]}
+                        </span>
+                        <strong>{item.label}</strong>
+                      </div>
                       <span>{pendingFieldType === item.type ? "selected" : "place on page"}</span>
                     </button>
                   ))}
@@ -978,8 +995,8 @@ export default function App({
                 </div>
                 <p className="helper-copy">
                   {sessionOnlySignatures
-                    ? "For security, signatures stay available only for this signed-in session."
-                    : "Save signatures once, then place them directly on the document."}
+                    ? "Signatures are saved for this session only."
+                    : "Save signatures once, then place them on the document."}
                 </p>
                 {showSignatureCreator ? (
                   <div className="stack signature-creator">
@@ -1063,75 +1080,95 @@ export default function App({
                 </div>
               </section>
 
-              <section className={`panel ${workspacePanel === "profiles" ? "panel--focus" : ""}`}>
-                <div className="panel__header">
-                  <h2>Reusable data</h2>
-                  <button type="button" className="button button--chip" onClick={createFillProfile}>
-                    New profile
-                  </button>
-                </div>
-                {store.fillProfiles.length > 0 ? (
-                  <div className="stack compact">
-                    <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
-                      {store.fillProfiles.map((profile) => (
-                        <option key={profile.id} value={profile.id}>
-                          {profile.name}
-                        </option>
-                      ))}
-                    </select>
-                    {selectedFillProfile ? (
-                      <>
-                        {selectedFillProfileKeys.map((key) => (
-                          <label key={key} className="form-field">
-                            <span>{key}</span>
-                            <input
-                              value={selectedFillProfile.values[key] ?? ""}
-                              onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
-                            />
-                          </label>
+              <details
+                className={`panel panel--collapsible ${workspacePanel === "profiles" ? "panel--focus" : ""}`}
+                open={isProfilesOpen}
+                onToggle={(event) => setIsProfilesOpen((event.currentTarget as HTMLDetailsElement).open)}
+              >
+                <summary className="panel__summary">
+                  <span>Reusable data</span>
+                  <span>{isProfilesOpen ? "Hide" : "Show"}</span>
+                </summary>
+                <div className="panel__collapsible-body">
+                  <div className="panel__header">
+                    <h2>Reusable data</h2>
+                    <button type="button" className="button button--chip" onClick={createFillProfile}>
+                      New profile
+                    </button>
+                  </div>
+                  {store.fillProfiles.length > 0 ? (
+                    <div className="stack compact">
+                      <select value={selectedFillProfileId ?? ""} onChange={(event) => setSelectedFillProfileId(event.target.value)}>
+                        {store.fillProfiles.map((profile) => (
+                          <option key={profile.id} value={profile.id}>
+                            {profile.name}
+                          </option>
                         ))}
-                        <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
-                          Apply profile
-                        </button>
-                      </>
-                    ) : null}
-                  </div>
-                ) : (
-                  <p className="helper-copy">Save recurring company, address, or role data once and reuse it later.</p>
-                )}
-              </section>
-
-              <section className={`panel ${workspacePanel === "templates" ? "panel--focus" : ""}`}>
-                <div className="panel__header">
-                  <h2>Templates</h2>
+                      </select>
+                      {selectedFillProfile ? (
+                        <>
+                          {selectedFillProfileKeys.map((key) => (
+                            <label key={key} className="form-field">
+                              <span>{key}</span>
+                              <input
+                                value={selectedFillProfile.values[key] ?? ""}
+                                onChange={(event) => updateFillProfileValue(selectedFillProfile.id, key, event.target.value)}
+                              />
+                            </label>
+                          ))}
+                          <button type="button" className="button button--ghost" onClick={applySelectedFillProfile}>
+                            Apply profile
+                          </button>
+                        </>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <p className="helper-copy">Save recurring data once and reuse it later.</p>
+                  )}
                 </div>
-                {suggestions.length > 0 ? (
-                  <div className="stack compact">
-                    {suggestions.slice(0, 3).map((suggestion) => (
-                      <button
-                        key={suggestion.templateId}
-                        type="button"
-                        className="suggestion-card"
-                        onClick={() => applyTemplate(suggestion.templateId)}
-                      >
-                        <strong>{suggestion.templateName}</strong>
-                        <span>{Math.round(suggestion.score * 100)}% match</span>
-                      </button>
-                    ))}
+              </details>
+
+              <details
+                className={`panel panel--collapsible ${workspacePanel === "templates" ? "panel--focus" : ""}`}
+                open={isTemplatesOpen}
+                onToggle={(event) => setIsTemplatesOpen((event.currentTarget as HTMLDetailsElement).open)}
+              >
+                <summary className="panel__summary">
+                  <span>Templates</span>
+                  <span>{isTemplatesOpen ? "Hide" : "Show"}</span>
+                </summary>
+                <div className="panel__collapsible-body">
+                  <div className="panel__header">
+                    <h2>Templates</h2>
                   </div>
-                ) : store.templates.length > 0 ? (
-                  <div className="stack compact">
-                    {store.templates.map((template) => (
-                      <button key={template.id} type="button" className="template-card" onClick={() => applyTemplate(template.id)}>
-                        <strong>{template.name}</strong>
-                        <span>{template.fieldDefinitions.length} field(s)</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="helper-copy">Saved templates will appear here.</p>
-                )}
-              </section>
+                  {suggestions.length > 0 ? (
+                    <div className="stack compact">
+                      {suggestions.slice(0, 3).map((suggestion) => (
+                        <button
+                          key={suggestion.templateId}
+                          type="button"
+                          className="suggestion-card"
+                          onClick={() => applyTemplate(suggestion.templateId)}
+                        >
+                          <strong>{suggestion.templateName}</strong>
+                          <span>{Math.round(suggestion.score * 100)}% match</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : store.templates.length > 0 ? (
+                    <div className="stack compact">
+                      {store.templates.map((template) => (
+                        <button key={template.id} type="button" className="template-card" onClick={() => applyTemplate(template.id)}>
+                          <strong>{template.name}</strong>
+                          <span>{template.fieldDefinitions.length} field(s)</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="helper-copy">Saved templates will appear here.</p>
+                  )}
+                </div>
+              </details>
             </aside>
 
             <section className="editor-surface">

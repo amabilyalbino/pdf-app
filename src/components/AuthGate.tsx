@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import type { Session } from "@supabase/supabase-js";
+import type { EmailOtpType, Session } from "@supabase/supabase-js";
 import {
   getFriendlyAuthCallbackMessage,
   getFriendlyAuthErrorMessage,
@@ -99,13 +99,32 @@ export function AuthGate({ children }: AuthGateProps) {
   const [isContinuingConfirmation, setIsContinuingConfirmation] = useState(false);
 
   const hasFullSetup = useMemo(() => hasProtectedAuthSetup, []);
-  const confirmationUrl = useMemo(() => {
+  const pendingConfirmation = useMemo(() => {
     if (desktopRuntime) {
       return null;
     }
 
     const url = new URL(window.location.href);
-    return url.searchParams.get("confirmation_url");
+    const confirmationUrl = url.searchParams.get("confirmation_url");
+    const tokenHash = url.searchParams.get("token_hash");
+    const type = url.searchParams.get("type");
+
+    if (tokenHash) {
+      return {
+        kind: "token_hash" as const,
+        tokenHash,
+        type: (type || "email") as EmailOtpType
+      };
+    }
+
+    if (confirmationUrl) {
+      return {
+        kind: "confirmation_url" as const,
+        confirmationUrl
+      };
+    }
+
+    return null;
   }, [desktopRuntime]);
 
   useEffect(() => {
@@ -240,19 +259,53 @@ export function AuthGate({ children }: AuthGateProps) {
   }
 
   function handleContinueConfirmation() {
-    if (!confirmationUrl) {
+    if (!pendingConfirmation) {
       setAuthError("This sign-in link is missing its confirmation step. Request a fresh email and try again.");
       return;
     }
 
-    try {
+    const currentConfirmation = pendingConfirmation;
+
+    async function continueConfirmation() {
       setIsContinuingConfirmation(true);
-      const targetUrl = new URL(confirmationUrl);
-      window.location.assign(targetUrl.toString());
-    } catch {
-      setIsContinuingConfirmation(false);
-      setAuthError("This sign-in link is no longer valid. Request a fresh email and try again.");
+      setAuthError(null);
+
+      try {
+        if (currentConfirmation.kind === "token_hash") {
+          if (!supabase) {
+            throw new Error("Secure sign-in is not ready yet.");
+          }
+
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: currentConfirmation.tokenHash,
+            type: currentConfirmation.type
+          });
+
+          if (error) {
+            throw error;
+          }
+
+          removeAuthSearchParams();
+          const url = new URL(window.location.href);
+          url.searchParams.delete("token_hash");
+          url.searchParams.delete("type");
+          window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+          return;
+        }
+
+        const targetUrl = new URL(currentConfirmation.confirmationUrl);
+        window.location.assign(targetUrl.toString());
+      } catch (error) {
+        setIsContinuingConfirmation(false);
+        setAuthError(
+          getFriendlyAuthCallbackMessage(
+            error instanceof Error ? error.message : "This sign-in link is no longer valid. Request a fresh email and try again."
+          )
+        );
+      }
     }
+
+    void continueConfirmation();
   }
 
   if (desktopRuntime) {
@@ -284,7 +337,7 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
-  if (confirmationUrl) {
+  if (pendingConfirmation) {
     return (
       <BrookieConfirmLinkPage
         recipientName="Brookie"

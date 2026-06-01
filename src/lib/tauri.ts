@@ -24,8 +24,14 @@ export async function saveBytesWithDialog(fileName: string, bytes: Uint8Array): 
     const anchor = document.createElement("a");
     anchor.href = url;
     anchor.download = fileName;
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
     anchor.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => {
+      URL.revokeObjectURL(url);
+      anchor.remove();
+    }, 1200);
     return fileName;
   }
 

@@ -52,3 +52,17 @@ export function getFriendlyAuthErrorMessage(error: unknown): string {
 
   return rawMessage;
 }
+
+export function getFriendlyAuthCallbackMessage(message: string): string {
+  const normalizedMessage = message.trim().toLowerCase();
+
+  if (
+    normalizedMessage.includes("expired") ||
+    normalizedMessage.includes("invalid") ||
+    normalizedMessage.includes("token")
+  ) {
+    return "This sign-in link is no longer valid. Some email providers preview links automatically before a person clicks them. Request a fresh email and use the latest link.";
+  }
+
+  return message;
+}

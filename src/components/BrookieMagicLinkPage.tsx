@@ -9,6 +9,13 @@ type BrookieMagicLinkPageProps = {
   onSubmit?: (email: string) => Promise<void>;
 };
 
+type BrookieConfirmLinkPageProps = {
+  recipientName?: string;
+  onContinue: () => void;
+  isSubmitting?: boolean;
+  error?: string | null;
+};
+
 type MascotMood = "idle" | "attentive" | "typing" | "invalid" | "valid" | "loading" | "success";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -329,6 +336,95 @@ function BrookieMascot({ mood }: { mood: MascotMood }) {
           strokeLinejoin="round"
         />
       </svg>
+    </div>
+  );
+}
+
+export function BrookieConfirmLinkPage({
+  recipientName = "Brookie",
+  onContinue,
+  isSubmitting = false,
+  error
+}: BrookieConfirmLinkPageProps) {
+  return (
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#F7F1EA] text-[#25332D]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <CornerCloud className="absolute left-[-1.75rem] top-[-0.75rem] h-26 w-36 rotate-[9deg] opacity-85 sm:left-0 sm:top-0" color="#CDEBFA" />
+        <CornerCloud className="absolute right-[-1.5rem] top-[-0.75rem] h-24 w-34 rotate-[186deg] opacity-80 sm:right-0 sm:top-0" color="#B8E3C8" />
+        <CornerCloud className="absolute bottom-[-1.25rem] left-[-1.25rem] h-28 w-40 rotate-[8deg] opacity-90 sm:left-0 sm:bottom-0" color="#B8E3C8" />
+        <CornerCloud className="absolute bottom-[-0.75rem] right-[-1.25rem] h-28 w-40 rotate-[190deg] opacity-85 sm:right-0 sm:bottom-0" color="#D5C8F2" />
+        <CloudSparkle className="absolute left-[17%] top-[11%] h-5 w-5 animate-brookie-sparkle text-[#F8D65C]" />
+        <LittleHeart className="absolute right-[12%] top-[37%] h-5 w-5 animate-brookie-drift text-[#F29AC2]/90" />
+      </div>
+
+      <div className="min-h-screen w-full flex items-center justify-center overflow-hidden px-4 py-8 sm:px-6 sm:py-10">
+        <div className="relative w-full max-w-[520px] px-2 sm:px-6">
+          <div className="mb-6 text-center">
+            <h1 className="mx-auto max-w-[12ch] text-4xl font-semibold leading-[0.95] tracking-[-0.06em] text-[#33423B] sm:text-5xl">
+              Almost there,{" "}
+              <span className="font-black text-[#93D8AE] [text-shadow:0_2px_0_rgba(255,255,255,0.85)]">
+                {recipientName}.
+              </span>
+            </h1>
+            <p className="mx-auto mt-3 max-w-[390px] text-base leading-7 text-[#6D7670] sm:text-lg">
+              Your email is ready. Click below to finish sign-in securely and open your PDF workspace.
+            </p>
+          </div>
+
+          <div className="relative z-20 flex justify-center mb-[-52px]">
+            <div className="relative">
+              <BrookieMascot mood={isSubmitting ? "loading" : "attentive"} />
+              <div className="absolute -right-2 bottom-1 hidden sm:block">
+                <LittleHeart className="absolute -top-4 left-4 h-4 w-4 text-[#F29AC2]" />
+                <CupDoodle />
+              </div>
+            </div>
+          </div>
+
+          <section className="relative mx-auto w-full max-w-[480px] rounded-[2rem] border border-white/60 bg-white/90 px-8 py-8 pt-20 shadow-[0_18px_48px_rgba(37,51,45,0.08)] backdrop-blur-sm">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-20 rounded-t-[2rem] bg-linear-to-b from-[#B8E3C8]/10 to-transparent" />
+            <div className="space-y-5 text-center">
+              <div className="space-y-2">
+                <h2 className="text-[1.7rem] font-semibold leading-tight tracking-[-0.04em] text-[#33423B] sm:text-[1.9rem]">
+                  Open your secure sign-in
+                </h2>
+                <p className="mx-auto max-w-[30ch] text-base leading-7 text-[#6D7670]">
+                  Some email providers preview links automatically. This extra step makes sure only your click opens the sign-in.
+                </p>
+              </div>
+
+              {error ? (
+                <div className="rounded-[1.1rem] border border-[#E7B2B7] bg-[#FFF6F7] px-4 py-3 text-sm leading-6 text-[#C7646B]">
+                  {error}
+                </div>
+              ) : null}
+
+              <button
+                type="button"
+                onClick={onContinue}
+                disabled={isSubmitting}
+                className={cx(
+                  "inline-flex w-full items-center justify-center rounded-[1.35rem] px-5 py-4 text-base font-semibold text-[#25332D] transition duration-300",
+                  isSubmitting
+                    ? "cursor-wait bg-[#B8E3C8]/80 shadow-[0_14px_24px_rgba(168,221,186,0.32)]"
+                    : "bg-[#A8DDBA] shadow-[0_14px_28px_rgba(168,221,186,0.34)] hover:-translate-y-0.5 hover:bg-[#B5E4C4] hover:shadow-[0_18px_32px_rgba(168,221,186,0.4)]"
+                )}
+              >
+                {isSubmitting ? "Opening your sign-in…" : "Continue to sign in"}
+              </button>
+
+              <div className="pt-1 text-center">
+                <div className="mb-2.5 flex items-center justify-center gap-3">
+                  <span className="h-px w-16 bg-[#E8E3DA]" />
+                  <LittleHeart className="h-4 w-4 text-[#F29AC2]/80" />
+                  <span className="h-px w-16 bg-[#E8E3DA]" />
+                </div>
+                <p className="text-xs text-[#93A099] sm:text-[0.82rem]">Made with a little bit of colour.</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 }

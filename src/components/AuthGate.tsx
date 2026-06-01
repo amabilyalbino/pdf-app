@@ -1,11 +1,16 @@
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { getFriendlyAuthErrorMessage, isAllowedEmail, normalizeEmail } from "../lib/auth";
+import {
+  getFriendlyAuthCallbackMessage,
+  getFriendlyAuthErrorMessage,
+  isAllowedEmail,
+  normalizeEmail
+} from "../lib/auth";
 import { setStorageScope } from "../lib/storage";
 import { allowedEmails, hasProtectedAuthSetup, hasSupabaseEnv, supabase } from "../lib/supabase";
 import { isTauriApp } from "../lib/tauri";
-import { BrookieMagicLinkPage } from "./BrookieMagicLinkPage";
+import { BrookieConfirmLinkPage, BrookieMagicLinkPage } from "./BrookieMagicLinkPage";
 
 type AuthGateProps = {
   children: (options: {
@@ -91,8 +96,17 @@ export function AuthGate({ children }: AuthGateProps) {
   const [loading, setLoading] = useState(!desktopRuntime && !devBypassActive);
   const [session, setSession] = useState<Session | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [isContinuingConfirmation, setIsContinuingConfirmation] = useState(false);
 
   const hasFullSetup = useMemo(() => hasProtectedAuthSetup, []);
+  const confirmationUrl = useMemo(() => {
+    if (desktopRuntime) {
+      return null;
+    }
+
+    const url = new URL(window.location.href);
+    return url.searchParams.get("confirmation_url");
+  }, [desktopRuntime]);
 
   useEffect(() => {
     if (desktopRuntime || devBypassActive) {
@@ -143,7 +157,7 @@ export function AuthGate({ children }: AuthGateProps) {
 
         if (authMessage) {
           removeAuthSearchParams();
-          setAuthError(authMessage);
+          setAuthError(getFriendlyAuthCallbackMessage(authMessage));
         }
 
         if (authCode) {
@@ -225,6 +239,22 @@ export function AuthGate({ children }: AuthGateProps) {
     setAuthError(null);
   }
 
+  function handleContinueConfirmation() {
+    if (!confirmationUrl) {
+      setAuthError("This sign-in link is missing its confirmation step. Request a fresh email and try again.");
+      return;
+    }
+
+    try {
+      setIsContinuingConfirmation(true);
+      const targetUrl = new URL(confirmationUrl);
+      window.location.assign(targetUrl.toString());
+    } catch {
+      setIsContinuingConfirmation(false);
+      setAuthError("This sign-in link is no longer valid. Request a fresh email and try again.");
+    }
+  }
+
   if (desktopRuntime) {
     return <>{children({ authEmail: null, authProtected: false, authBypassed: true })}</>;
   }
@@ -250,6 +280,17 @@ export function AuthGate({ children }: AuthGateProps) {
         eyebrow="Secure access"
         title="Checking your session…"
         body="We are gently opening the door to your PDF workspace."
+      />
+    );
+  }
+
+  if (confirmationUrl) {
+    return (
+      <BrookieConfirmLinkPage
+        recipientName="Brookie"
+        isSubmitting={isContinuingConfirmation}
+        error={authError}
+        onContinue={handleContinueConfirmation}
       />
     );
   }
